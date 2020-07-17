@@ -6,12 +6,18 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"gitlab.com/fabstao/fabsgoblog/controllers"
+	"gitlab.com/fabstao/fabsgoblog/models"
 	"gitlab.com/fabstao/fabsgoblog/views"
 )
 
 func main() {
 	// Initial vars
 	templatesDir := "views/templates/*.html"
+
+	// Inicializar capa de datos
+	models.DbConnect()
+	models.MigrarModelos()
+	defer models.Dbcon.Close()
 
 	// Iniciar echo web framework
 	e := echo.New()
@@ -32,6 +38,10 @@ func main() {
 
 	// echo ROUTER (declare HTTP verbs here: GET, PUT, POST, DELETE)
 	e.GET("/", controllers.Login)
+
+	e.GET("/cuenta", controllers.Nuevo)
+
+	e.POST("/cuenta", controllers.Crear)
 
 	h := e.Group("/pages")
 	h.GET("/index", controllers.Inicio)

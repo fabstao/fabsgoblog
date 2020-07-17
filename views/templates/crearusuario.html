@@ -1,0 +1,27 @@
+{{ template "head.html" .Title }}
+{{ template "header.html" .Header }}
+<div class="container">
+<h3>Nuevo usuario</h3>
+<form action="/cuenta" method="POST">
+<table class="table">
+<tr>
+<td><strong>Usuario: </strong></td><td><input type="text" min="4" max="200" id="usuario" /></td>
+</tr>
+<tr>
+<td><strong>E-mail: </strong></td><td><input type="email" min="4" max="200" id="email" /></td>
+</tr>
+<tr>
+<td><strong>Password </strong></td><td><input type="Password" max="15" id="password" /></td>
+</tr>
+<tr>
+<td></td><td><input type="submit" max="15" value="Crear" /></td>
+</tr>
+</table>
+</form>
+</div>
+<p>
+{{ if .Username }}
+Usuario <strong>{{ .Username }}</strong> creado exitosamente
+{{ end }}
+</p>
+{{ template "footer.html" .Footer }}

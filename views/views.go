@@ -18,7 +18,7 @@ type ComunesSitio struct {
 var Comunes = ComunesSitio{
 	Title:  "FabsBlog",
 	Header: "Fabs Blog",
-	Footer: "<a href=\"https://koalatechie.com\">https://koalatechie.com</a>",
+	Footer: "By Fabs",
 }
 
 // Template struct for views

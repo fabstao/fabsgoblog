@@ -2,10 +2,12 @@
 
 ## TODO
 
-* Add ORM support
-* Develop Models
-* Add Basic Auth
-* Add Captcha protetion
+* ~Add Database and ORM support~
+* Add PostgreSQL support
+* Develop Models - in progress
+* Add Basic Auth - in progress
+* Add Captcha protection
+* Add Posts and comments forms
 
 ## Author
 

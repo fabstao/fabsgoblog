@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/labstack/echo"
+	"gitlab.com/fabstao/fabsgoblog/models"
 	"gitlab.com/fabstao/fabsgoblog/views"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Login Handler
@@ -59,4 +61,42 @@ func Hello(c echo.Context) error {
 	content.Timestamp = time.Now().UTC()
 	content.Random = rand.Intn(1000)
 	return c.JSON(http.StatusOK, content)
+}
+
+// Nuevo - controlador para formulario nuevo usuario
+func Nuevo(c echo.Context) error {
+	datos := struct {
+		Username string
+		Title    string
+		Header   string
+		Footer   string
+	}{
+		Username: "",
+		Title:    views.Comunes.Title,
+		Header:   views.Comunes.Header,
+		Footer:   views.Comunes.Footer,
+	}
+	return c.Render(http.StatusOK, "crearusuario.html", datos)
+}
+
+// Crear usuario
+func Crear(c echo.Context) error {
+	var usuario models.User
+	usuario.Username = c.FormValue("usuario")
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(c.FormValue("password")), bcrypt.DefaultCost)
+	usuario.Password = string(hashed)
+	usuario.Email = c.FormValue("email")
+	models.Dbcon.Create(&usuario)
+	datos := struct {
+		Username string
+		Title    string
+		Header   string
+		Footer   string
+	}{
+		Username: usuario.Username,
+		Title:    views.Comunes.Title,
+		Header:   views.Comunes.Header,
+		Footer:   views.Comunes.Footer,
+	}
+	return c.Render(http.StatusOK, "crearusuario.html", datos)
 }
