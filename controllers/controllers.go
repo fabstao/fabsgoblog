@@ -7,29 +7,43 @@ import (
 	"time"
 
 	"github.com/labstack/echo"
+	"gitlab.com/fabstao/fabsgoblog/views"
 )
+
+// Login Handler
+func Login(c echo.Context) error {
+	var datos struct {
+		Title  string
+		Header string
+		Body   []string
+		Footer string
+	}
+	datos.Header = views.Comunes.Header
+	datos.Title = views.Comunes.Title
+	datos.Footer = views.Comunes.Footer
+	return c.Render(http.StatusOK, "login.html", datos)
+}
+
+// Signup : Registrarse
+//func Signup(c echo.Context) error {
+
+//}
 
 // Inicio Handler
 func Inicio(c echo.Context) error {
 	fmt.Println("Empezando Inicio...")
 	var datos struct {
-		Head   map[string]string
-		Header map[string]string
+		Title  string
+		Header string
 		Body   []string
-		Footer map[string]string
+		Footer string
 	}
-	datos.Head = map[string]string{
-		"Title": "Fabs BLOG",
-	}
-	datos.Header = map[string]string{
-		"Title": "Fabs BLOG",
-	}
+	datos.Header = views.Comunes.Header
+	datos.Title = views.Comunes.Title
+	datos.Footer = views.Comunes.Footer
 	datos.Body = append(datos.Body, "Item 1")
 	datos.Body = append(datos.Body, "Item 2")
 	datos.Body = append(datos.Body, "Item 3")
-	datos.Footer = map[string]string{
-		"Footer": "Page 1",
-	}
 	return c.Render(http.StatusOK, "index.html", datos)
 }
 

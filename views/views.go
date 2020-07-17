@@ -7,6 +7,20 @@ import (
 	"github.com/labstack/echo"
 )
 
+// ComunesSitio - common rendering values
+type ComunesSitio struct {
+	Title  string
+	Header string
+	Footer string
+}
+
+// Comunes - compartir info común a todas las páginas
+var Comunes = ComunesSitio{
+	Title:  "FabsBlog",
+	Header: "Fabs Blog",
+	Footer: "<a href=\"https://koalatechie.com\">https://koalatechie.com</a>",
+}
+
 // Template struct for views
 type Template struct {
 	Templates *template.Template

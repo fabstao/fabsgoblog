@@ -31,6 +31,8 @@ func main() {
 	e.Renderer = t
 
 	// echo ROUTER (declare HTTP verbs here: GET, PUT, POST, DELETE)
+	e.GET("/", controllers.Login)
+
 	h := e.Group("/pages")
 	h.GET("/index", controllers.Inicio)
 
