@@ -87,29 +87,48 @@ func Nuevo(c echo.Context) error {
 
 // Crear usuario
 func Crear(c echo.Context) error {
-	var usuario models.User
-	var rol models.Role
-	models.Dbcon.Where("role = ?", "usuario").Find(&rol)
-	usuario.Username = c.FormValue("usuario")
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(c.FormValue("password")), bcrypt.DefaultCost)
-	usuario.Password = string(hashed)
-	usuario.Email = c.FormValue("email")
-	usuario.Role = rol
 	datos := struct {
 		Username     string
 		Title        string
 		Header       string
 		Footer       string
 		MensajeFlash string
+		Alerta       string
 	}{
-		Username:     usuario.Username,
+		Username:     "",
 		Title:        views.Comunes.Title,
 		Header:       views.Comunes.Header,
 		Footer:       views.Comunes.Footer,
-		MensajeFlash: "Usuario " + usuario.Username + " creado exitosamente",
+		MensajeFlash: "",
+		Alerta:       "success",
 	}
+	var usuario models.User
+	var checausuario models.User
+	var rol models.Role
+	user := c.FormValue("usuario")
+	email := c.FormValue("email")
+	models.Dbcon.Where("username = ?", user).Find(&checausuario)
+	if len(checausuario.Email) > 0 {
+		datos.MensajeFlash = "Usuario ya existe: " + user
+		datos.Alerta = "danger"
+		return c.Render(http.StatusOK, "crearusuario.html", datos)
+	}
+	models.Dbcon.Where("email = ?", email).Find(&checausuario)
+	if len(checausuario.Email) > 0 {
+		datos.MensajeFlash = "Dirección de correo-e ya existe: " + email
+		datos.Alerta = "danger"
+		return c.Render(http.StatusOK, "crearusuario.html", datos)
+	}
+	models.Dbcon.Where("role = ?", "usuario").Find(&rol)
+	usuario.Username = user
+	usuario.Email = email
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(c.FormValue("password")), bcrypt.DefaultCost)
+	usuario.Password = string(hashed)
+	usuario.Role = rol
+
 	fmt.Println(usuario)
 	models.Dbcon.Create(&usuario)
+	datos.MensajeFlash = "Usuario " + usuario.Username + " creado exitosamente"
 	return c.Render(http.StatusOK, "crearusuario.html", datos)
 }
 
@@ -118,7 +137,9 @@ func Checklogin(c echo.Context) error {
 	var usuario models.User
 	email := c.FormValue("email")
 	password := c.FormValue("password")
+	fmt.Print("Login: ", email)
 	models.Dbcon.Where("email = ?", email).Find(&usuario)
+	fmt.Print("Login: Successful")
 	datos := struct {
 		Title        string
 		Header       string
@@ -131,7 +152,7 @@ func Checklogin(c echo.Context) error {
 		MensajeFlash: "",
 	}
 	fmt.Println(datos)
-	if usuario.Email == "" {
+	if len(usuario.Email) < 1 {
 		datos.MensajeFlash = "Correo-e o contraseña incorrectos"
 		return c.Render(http.StatusOK, "login.html", datos)
 	}

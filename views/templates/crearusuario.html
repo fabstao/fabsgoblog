@@ -2,7 +2,7 @@
 {{ template "header.html" .Header }}
 <div class="container">
 {{ if .MensajeFlash }}
-<div class="alert alert-success" role="alert">
+<div class="alert alert-{{ .Alerta }}" role="alert">
 {{ .MensajeFlash }}
 </div>
 {{ end }}
@@ -38,7 +38,6 @@ Usuario <strong>{{ .Username }}</strong> creado exitosamente
 <script src="https://www.google.com/recaptcha/api.js"></script>
 <script>
    function onSubmit(token) {
-       alert(token);
      document.getElementById("crearusuario").submit();
    }
  </script>

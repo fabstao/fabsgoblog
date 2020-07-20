@@ -29,12 +29,12 @@ func MigrarModelos() {
 	var rolea Role
 	var roleu Role
 	var cuenta uint
-	Dbcon.Where("rolea = ?", "admin").Find(&rolea).Count(&cuenta)
+	Dbcon.Where("role = ?", "admin").Find(&rolea).Count(&cuenta)
 	if cuenta < 1 {
 		rolea.Role = "admin"
 		Dbcon.Create(&rolea)
 	}
-	Dbcon.Where("roleu = ?", "usuario").Find(&roleu).Count(&cuenta)
+	Dbcon.Where("role = ?", "usuario").Find(&roleu).Count(&cuenta)
 	if cuenta < 1 {
 		roleu.Role = "usuario"
 		Dbcon.Create(&roleu)
