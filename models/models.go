@@ -25,6 +25,20 @@ func MigrarModelos() {
 	Dbcon.AutoMigrate(&User{})
 	Dbcon.AutoMigrate(&Post{})
 	Dbcon.AutoMigrate(&Comentario{})
+	Dbcon.AutoMigrate(&Role{})
+	var rolea Role
+	var roleu Role
+	var cuenta uint
+	Dbcon.Where("rolea = ?", "admin").Find(&rolea).Count(&cuenta)
+	if cuenta < 1 {
+		rolea.Role = "admin"
+		Dbcon.Create(&rolea)
+	}
+	Dbcon.Where("roleu = ?", "usuario").Find(&roleu).Count(&cuenta)
+	if cuenta < 1 {
+		roleu.Role = "usuario"
+		Dbcon.Create(&roleu)
+	}
 	fmt.Println("Modelos migrados ")
 }
 
@@ -34,6 +48,14 @@ type User struct {
 	Username string
 	Password string
 	Email    string
+	RoleID   uint
+	Role     Role `gorm:"foreignkey:RoleID"`
+}
+
+// Role struct for RBAC
+type Role struct {
+	gorm.Model
+	Role string
 }
 
 // Post en el blog, pertenece al usuario y tiene muchos comentarios

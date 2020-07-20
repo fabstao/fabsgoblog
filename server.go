@@ -44,6 +44,7 @@ func main() {
 	e.POST("/cuenta", controllers.Crear)
 
 	h := e.Group("/pages")
+	h.POST("/index", controllers.Checklogin)
 	h.GET("/index", controllers.Inicio)
 
 	api := e.Group("/api")

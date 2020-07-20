@@ -1,22 +1,37 @@
 {{ template "head.html" .Title }}
 {{ template "header.html" .Header }}
 <div class="container">
+{{ if .MensajeFlash }}
+<div class="alert alert-danger" role="alert">
+{{ .MensajeFlash }}
+</div>
+{{ end }}
 <h3>Entrar con usuario y contraseña</h3>
 <div class="container">
-    <form action="/" method="POST">
+    <form action="/pages/index" method="POST" id="flogin">
     <table class="table">
     <tr>
-    <td><strong>Usuario: </strong></td><td><input type="text" min="4" max="200" id="usuario" /></td>
+    <td><strong>Correo-e: </strong></td><td><input type="email" min="4" max="200" id="email" name="email" placeholder="Ingrese una dirección de correo válida" /></td>
     </tr>
     <tr>
-    <td><strong>Password </strong></td><td><input type="Password" max="15" id="password" /></td>
+    <td><strong>Password </strong></td><td><input type="Password" min="8" max="15" id="password" name="password"/></td>
     </tr>
     <tr>
-    <td></td><td><input type="submit" max="15" value="Entrar" /></td>
+    <td></td><td><button class="g-recaptcha" 
+        data-sitekey="6LdR07EZAAAAALAANQF1zzAlKrbyZ5ubaI2LzC3c" 
+        data-callback='onSubmit' 
+        data-action='submit'>Entrar</button></td>
     </tr>
     </table>
     </form>
 </div>
 <a href="/cuenta">Crear cuenta nueva</a>
 </div>
+<script src="https://www.google.com/recaptcha/api.js"></script>
+<script>
+   function onSubmit(token) {
+       alert(token);
+     document.getElementById("flogin").submit();
+   }
+ </script>
 {{ template "footer.html" .Footer }}
