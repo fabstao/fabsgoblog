@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var cookie *http.Cookie
+var cookie http.Cookie
 
 // Login Handler
 func Login(c echo.Context) error {
@@ -162,9 +162,10 @@ func Checklogin(c echo.Context) error {
 	}
 
 	cookie.Name = "jsessionid"
-	cookie.Value = usuario.Email
+	cookie.Value = usuario.Email + "," + c.RealIP() + "," + usuario.Username
 	cookie.Expires = time.Now().Add(5 * time.Minute)
-	c.SetCookie(cookie)
+	cookie.Domain = "localhost"
+	c.SetCookie(&cookie)
 	fmt.Println(usuario)
 	return c.Render(http.StatusOK, "index.html", datos)
 }

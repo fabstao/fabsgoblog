@@ -17,7 +17,6 @@ func main() {
 	// Inicializar capa de datos
 	models.DbConnect()
 	models.MigrarModelos()
-	defer models.Dbcon.Close()
 
 	// Iniciar echo web framework
 	e := echo.New()
@@ -52,4 +51,5 @@ func main() {
 
 	// Go echo server!
 	e.Logger.Fatal(e.Start(":8019"))
+	defer models.Dbcon.Close()
 }
