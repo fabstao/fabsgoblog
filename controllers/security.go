@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"gitlab.com/fabstao/fabsgoblog/models"
 	"gitlab.com/fabstao/fabsgoblog/views"
@@ -104,9 +105,19 @@ func Checklogin(c echo.Context) error {
 		datos.MensajeFlash = "Correo-e o contraseña incorrectos"
 		return c.Render(http.StatusOK, "login.html", datos)
 	}
-
+	var rol models.Role
+	models.Dbcon.Where("id = ?", usuario.RoleID).Find(&rol)
+	token := jwt.New(jwt.SigningMethodHS256)
+	clamas := token.Claims.(jwt.MapClaims)
+	clamas["user"] = usuario.Username
+	clamas["rol"] = rol.Role
+	clamas["exp"] = time.Now().Add(time.Hour).Unix()
+	t, err := token.SignedString([]byte("tequisquiapan"))
+	if err != nil {
+		return err
+	}
 	cookie.Name = "jsessionid"
-	cookie.Value = usuario.Email + "," + c.RealIP() + "," + usuario.Username
+	cookie.Value = t
 	cookie.Expires = time.Now().Add(5 * time.Minute)
 	cookie.Domain = "localhost"
 	c.SetCookie(&cookie)
