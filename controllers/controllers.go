@@ -29,43 +29,38 @@ type PageRender struct {
 	Alerta       string
 }
 
-// ObtenClamas read from cookie
-func ObtenClamas() (map[string]string, error) {
-	//sdatos := make(map[string]string)
-	sdatos, err := ValidateToken(cookie.Value)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	return sdatos.(map[string]string), nil
-}
-
 // Inicio Handler
 func Inicio(c echo.Context) error {
-	fmt.Println("Empezando Blog...")
-	sesion, err := ObtenClamas()
-	if err != nil {
-		sesion := make(map[string]string)
-		sesion["user"] = ""
-		sesion["rol"] = ""
+	token := "null"
+	if vcookie, err := c.Cookie("frontends1"); err != nil {
+		fmt.Println("ERROR reading cookie: ", err)
+	} else {
+		token = vcookie.Value
+		fmt.Println("TOKEN - index: ", token)
+		vcookie.Expires = time.Now().Add(15 * time.Minute)
+		c.SetCookie(vcookie)
 	}
+
+	clamas := ValidateToken(token).(map[string]string)
+	fmt.Println("Empezando Blog...")
+	fmt.Println(clamas)
 	var datos struct {
 		Title  string
 		Header Titulo
 		Body   []string
 		Footer string
 		User   string
-		Rol    string
+		Role   string
 	}
 	datos.Header = Titulo{
 		"Fabs BLOG",
 		"",
 		"",
 	}
-	datos.Title = views.Comunes.Title
+	datos.Header.Title = views.Comunes.Title
 	datos.Footer = views.Comunes.Footer
-	datos.User = sesion["user"]
-	datos.Rol = sesion["rol"]
+	datos.Header.User = clamas["User"]
+	datos.Header.Role = clamas["Role"]
 	datos.Body = append(datos.Body, "Item 1")
 	datos.Body = append(datos.Body, "Item 2")
 	datos.Body = append(datos.Body, "Item 3")

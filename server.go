@@ -39,20 +39,18 @@ func main() {
 	e.GET("/", controllers.Inicio)
 	e.GET("/login", controllers.Login)
 	e.GET("/logout", controllers.Logout)
-
 	e.GET("/cuenta", controllers.Nuevo)
-
 	e.POST("/cuenta", controllers.Crear)
+	e.POST("/login", controllers.Checklogin)
 
-	h := e.Group("/pages")
-	h.POST("/index", controllers.Checklogin)
-	h.GET("/index", controllers.Inicio)
+	//h := e.Group("/admin")
+	//h.GET("/index", controllers.Inicio)
 
 	api := e.Group("/api")
 	api.GET("/api", controllers.Hello)
 
 	sapi := e.Group("/sapi")
-	sapi.Use(middleware.JWT([]byte("tequisquiapantequisquiapantequisquiapantequisquiapantequisquiapantequisquiapantequisquiapantequisquiapan")))
+	sapi.Use(middleware.JWT([]byte(controllers.Secret)))
 
 	// Go echo server!
 	e.Logger.Fatal(e.Start(":8019"))

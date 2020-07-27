@@ -7,5 +7,7 @@ require (
 	github.com/jinzhu/gorm v1.9.14
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/robbert229/jwt v2.0.0+incompatible
 	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
 )

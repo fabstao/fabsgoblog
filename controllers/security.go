@@ -6,14 +6,15 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
+	"github.com/robbert229/jwt"
 	"gitlab.com/fabstao/fabsgoblog/models"
 	"gitlab.com/fabstao/fabsgoblog/views"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var cookie http.Cookie
+var Secret = "Tequ1squiapan"
 
 // PToken share token with middleware
 var PToken string
@@ -147,65 +148,81 @@ func Checklogin(c echo.Context) error {
 	datos.Header.User = usuario.Username
 	var rol models.Role
 	models.Dbcon.Where("id = ?", usuario.RoleID).Find(&rol)
-	token := jwt.New(jwt.SigningMethodHS256)
-	clamas := token.Claims.(jwt.MapClaims)
-	clamas["user"] = usuario.Username
-	clamas["rol"] = rol.Role
-	clamas["exp"] = time.Now().Add(time.Hour).Unix()
 	var err error
-	PToken, err = token.SignedString([]byte("el_secreto"))
+	PToken, err = CrearToken(usuario.Username, rol.Role)
 	if err != nil {
 		return err
 	}
-	cookie.Name = "jsessionid"
+	cookie.Name = "frontends1"
 	cookie.Value = strings.TrimSpace(PToken)
-	cookie.Expires = time.Now().Add(5 * time.Minute)
+	cookie.Expires = time.Now().Add(15 * time.Minute)
 	cookie.Domain = "localhost"
 	c.SetCookie(&cookie)
 	fmt.Println(usuario)
 	return c.Render(http.StatusOK, "index.html", datos)
 }
 
-// ValidateToken to check JWT cookie
-func ValidateToken(vtoken string) (interface{}, error) {
-	token, err := jwt.Parse(strings.TrimSpace(vtoken), func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
-		fmt.Println("Validando firma HMAC: ", vtoken)
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Método de firmado inválido: %v", token.Header["alg"])
-		}
+// CrearToken debe ser reusable
+func CrearToken(usuario, rol string) (string, error) {
+	algorithm := jwt.HmacSha256(Secret)
 
-		var verifyKey []byte
-		// verifyKey is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return verifyKey, nil
-	})
+	claims := jwt.NewClaim()
+	claims.Set("Role", rol)
+	claims.Set("User", usuario)
+	claims.SetTime("exp", time.Now().Add(time.Hour*2))
+
+	token, err := algorithm.Encode(claims)
 	if err != nil {
-		fmt.Println("Error: ", err)
-		switch err.(type) {
-		case *jwt.ValidationError:
-			vErr := err.(*jwt.ValidationError)
-			switch vErr.Errors {
-			case jwt.ValidationErrorExpired:
-				fmt.Println("Token expirado")
-				return nil, err
-			case jwt.ValidationErrorSignatureInvalid:
-				fmt.Println("Token con firma inválida")
-				return nil, err
-			default:
-				fmt.Println("Token inválido")
-				return nil, err
-			}
-		default:
-			fmt.Println("Token inválido")
-			return nil, err
-		}
+		fmt.Println("ERROR: ", err)
+		return "", err
 	}
 
-	if clamas, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(clamas["user"], clamas["rol"])
-		return clamas, nil
+	fmt.Printf("Token: %s\n", token)
+	return token, nil
+}
+
+// ValidateToken to check JWT cookie
+func ValidateToken(token string) interface{} {
+	fmt.Println("Starting token validation...")
+	algorithm := jwt.HmacSha256(Secret)
+	if algorithm.Validate(token) != nil {
+		fmt.Println("ERROR: Invalid token")
+		return map[string]string{"User": "", "Role": ""}
 	}
 
-	fmt.Println(err)
-	return nil, fmt.Errorf("ERROR: Error desconocido")
+	loadedClaims, err := algorithm.Decode(token)
+	if err != nil {
+		fmt.Println("ERROR: ", err)
+		return map[string]string{"User": "", "Role": ""}
+	}
+
+	role, err := loadedClaims.Get("Role")
+	if err != nil {
+		fmt.Println("ERROR: ", err)
+		return map[string]string{"User": "", "Role": ""}
+	}
+
+	user, err := loadedClaims.Get("User")
+	if err != nil {
+		fmt.Println("ERROR: ", err)
+		return map[string]string{"User": "", "Role": ""}
+	}
+
+	roleString, ok := role.(string)
+	if !ok {
+		fmt.Println("ERROR: ", err)
+		return map[string]string{"User": "", "Role": ""}
+	}
+
+	userString, ok := user.(string)
+	if !ok {
+		fmt.Println("ERROR: ", err)
+		return map[string]string{"User": "", "Role": ""}
+	}
+
+	udatos := make(map[string]string)
+	udatos["User"] = userString
+	udatos["Role"] = roleString
+
+	return udatos
 }
