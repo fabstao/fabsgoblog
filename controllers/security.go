@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -14,23 +15,53 @@ import (
 
 var cookie http.Cookie
 
+// PToken share token with middleware
+var PToken string
+
 // Login Handler
 func Login(c echo.Context) error {
 	datos := PageRender{
-		Title:        views.Comunes.Title,
-		Header:       views.Comunes.Header,
+		Header: Titulo{
+			views.Comunes.Title,
+			"",
+			"",
+		},
+		Title:        views.Comunes.Header,
 		Footer:       views.Comunes.Footer,
 		MensajeFlash: "",
 	}
 	return c.Render(http.StatusOK, "login.html", datos)
 }
 
+// Logout - destroy session
+func Logout(c echo.Context) error {
+	datos := PageRender{
+		Header: Titulo{
+			views.Comunes.Title,
+			"",
+			"",
+		},
+		Title:        views.Comunes.Header,
+		Footer:       views.Comunes.Footer,
+		MensajeFlash: "",
+	}
+	cookie.Name = "jsessionid"
+	cookie.Value = ""
+	cookie.Expires = time.Now()
+	cookie.Domain = ""
+	return c.Render(http.StatusOK, "index.html", datos)
+}
+
 // Nuevo - controlador para formulario nuevo usuario
 func Nuevo(c echo.Context) error {
 	datos := PageRender{
-		Username:     "",
-		Title:        views.Comunes.Title,
-		Header:       views.Comunes.Header,
+		Username: "",
+		Header: Titulo{
+			views.Comunes.Title,
+			"",
+			"",
+		},
+		Title:        views.Comunes.Header,
 		Footer:       views.Comunes.Footer,
 		MensajeFlash: "",
 	}
@@ -40,9 +71,13 @@ func Nuevo(c echo.Context) error {
 // Crear usuario
 func Crear(c echo.Context) error {
 	datos := PageRender{
-		Username:     "",
-		Title:        views.Comunes.Title,
-		Header:       views.Comunes.Header,
+		Username: "",
+		Header: Titulo{
+			views.Comunes.Title,
+			"",
+			"",
+		},
+		Title:        views.Comunes.Header,
 		Footer:       views.Comunes.Footer,
 		MensajeFlash: "",
 		Alerta:       "success",
@@ -89,10 +124,13 @@ func Checklogin(c echo.Context) error {
 	password := c.FormValue("password")
 	fmt.Print("Login: ", email)
 	models.Dbcon.Where("email = ?", email).Find(&usuario)
-	fmt.Print("Login: Successful")
 	datos := PageRender{
-		Title:        views.Comunes.Title,
-		Header:       views.Comunes.Header,
+		Header: Titulo{
+			views.Comunes.Title,
+			"",
+			"",
+		},
+		Title:        views.Comunes.Header,
 		Footer:       views.Comunes.Footer,
 		MensajeFlash: "",
 	}
@@ -105,6 +143,8 @@ func Checklogin(c echo.Context) error {
 		datos.MensajeFlash = "Correo-e o contraseña incorrectos"
 		return c.Render(http.StatusOK, "login.html", datos)
 	}
+	fmt.Print("Login: Successful")
+	datos.Header.User = usuario.Username
 	var rol models.Role
 	models.Dbcon.Where("id = ?", usuario.RoleID).Find(&rol)
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -112,15 +152,60 @@ func Checklogin(c echo.Context) error {
 	clamas["user"] = usuario.Username
 	clamas["rol"] = rol.Role
 	clamas["exp"] = time.Now().Add(time.Hour).Unix()
-	t, err := token.SignedString([]byte("tequisquiapan"))
+	var err error
+	PToken, err = token.SignedString([]byte("el_secreto"))
 	if err != nil {
 		return err
 	}
 	cookie.Name = "jsessionid"
-	cookie.Value = t
+	cookie.Value = strings.TrimSpace(PToken)
 	cookie.Expires = time.Now().Add(5 * time.Minute)
 	cookie.Domain = "localhost"
 	c.SetCookie(&cookie)
 	fmt.Println(usuario)
 	return c.Render(http.StatusOK, "index.html", datos)
+}
+
+// ValidateToken to check JWT cookie
+func ValidateToken(vtoken string) (interface{}, error) {
+	token, err := jwt.Parse(strings.TrimSpace(vtoken), func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the alg is what you expect:
+		fmt.Println("Validando firma HMAC: ", vtoken)
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Método de firmado inválido: %v", token.Header["alg"])
+		}
+
+		var verifyKey []byte
+		// verifyKey is a []byte containing your secret, e.g. []byte("my_secret_key")
+		return verifyKey, nil
+	})
+	if err != nil {
+		fmt.Println("Error: ", err)
+		switch err.(type) {
+		case *jwt.ValidationError:
+			vErr := err.(*jwt.ValidationError)
+			switch vErr.Errors {
+			case jwt.ValidationErrorExpired:
+				fmt.Println("Token expirado")
+				return nil, err
+			case jwt.ValidationErrorSignatureInvalid:
+				fmt.Println("Token con firma inválida")
+				return nil, err
+			default:
+				fmt.Println("Token inválido")
+				return nil, err
+			}
+		default:
+			fmt.Println("Token inválido")
+			return nil, err
+		}
+	}
+
+	if clamas, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		fmt.Println(clamas["user"], clamas["rol"])
+		return clamas, nil
+	}
+
+	fmt.Println(err)
+	return nil, fmt.Errorf("ERROR: Error desconocido")
 }

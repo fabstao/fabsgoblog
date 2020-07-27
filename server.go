@@ -36,7 +36,9 @@ func main() {
 	e.Renderer = t
 
 	// echo ROUTER (declare HTTP verbs here: GET, PUT, POST, DELETE)
-	e.GET("/", controllers.Login)
+	e.GET("/", controllers.Inicio)
+	e.GET("/login", controllers.Login)
+	e.GET("/logout", controllers.Logout)
 
 	e.GET("/cuenta", controllers.Nuevo)
 
@@ -48,6 +50,9 @@ func main() {
 
 	api := e.Group("/api")
 	api.GET("/api", controllers.Hello)
+
+	sapi := e.Group("/sapi")
+	sapi.Use(middleware.JWT([]byte("tequisquiapantequisquiapantequisquiapantequisquiapantequisquiapantequisquiapantequisquiapantequisquiapan")))
 
 	// Go echo server!
 	e.Logger.Fatal(e.Start(":8019"))
