@@ -46,10 +46,11 @@ func Logout(c echo.Context) error {
 		Footer:       views.Comunes.Footer,
 		MensajeFlash: "",
 	}
-	cookie.Name = "jsessionid"
-	cookie.Value = ""
-	cookie.Expires = time.Now()
-	cookie.Domain = ""
+	dcookie, _ := c.Cookie("frontends1")
+	dcookie.Value = ""
+	dcookie.Expires = time.Now()
+	dcookie.Domain = ""
+	c.SetCookie(dcookie)
 	return c.Render(http.StatusOK, "index.html", datos)
 }
 

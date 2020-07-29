@@ -6,7 +6,8 @@
 * Add PostgreSQL support
 * Develop Models - in progress
 * Add Basic Auth - in progress
-* Add Captcha protection
+* ~Add Captcha protection~
+* Add e-mail validation workflow
 * Add Posts and comments forms
 
 ## Author
