@@ -2,7 +2,7 @@
 {{ define "content" }}
   <div class="container">
   {{ if .mensajeflash }}
-    <div class={{ .alerta }} role="alert">
+    <div class="{{ .alerta }}" role="alert">
   {{ .mensajeflash }}
     </div>
   {{ end }}
