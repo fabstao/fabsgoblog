@@ -1,7 +1,11 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/foolin/goview/supports/echoview"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"gitlab.com/fabstao/fabsgoblog/controllers"
@@ -10,6 +14,13 @@ import (
 
 func main() {
 	// Initial vars
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	controllers.SITEKEY = os.Getenv("SITEKEY")
+	controllers.Secret = os.Getenv("FGOSECRET")
+
 	//templatesDir := "views/templates/*.html"
 
 	// Inicializar capa de datos

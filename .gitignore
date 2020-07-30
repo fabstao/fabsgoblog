@@ -2,3 +2,4 @@
 *.code-workspace
 *.db
 *build*
+.env

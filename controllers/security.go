@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -17,7 +19,10 @@ import (
 var cookie http.Cookie
 
 // Secret : change here for all JWT signing
-var Secret = "Tequ1squiapan"
+var Secret string
+
+// SITEKEY for recaptcha v3
+var SITEKEY string
 
 // PToken share token with middleware
 var PToken string
@@ -41,10 +46,12 @@ func Logout(c echo.Context) error {
 		"role":         "",
 		"mensajeflash": "",
 	}
-	dcookie, _ := c.Cookie("frontends1")
-	dcookie.Value = ""
-	dcookie.Expires = time.Now()
-	dcookie.Domain = ""
+	dcookie, err := c.Cookie("frontends1")
+	if err == nil {
+		dcookie.Value = ""
+		dcookie.Expires = time.Now()
+		dcookie.Domain = ""
+	}
 	c.SetCookie(dcookie)
 	return c.Render(http.StatusOK, "index", datos)
 }
@@ -74,6 +81,13 @@ func Crear(c echo.Context) error {
 	var rol models.Role
 	user := c.FormValue("usuario")
 	email := c.FormValue("email")
+
+	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
+		datos["mensajeflash"] = "Este sistema sólo es para humanos"
+		datos["alerta"] = template.HTML("alert alert-danger")
+		return c.Render(http.StatusForbidden, "login", datos)
+	}
+
 	if len(user) < 4 || len(email) < 4 {
 		datos["mensajeflash"] = "Usuario y correo no pueden estar vacíos o demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
@@ -98,7 +112,6 @@ func Crear(c echo.Context) error {
 	usuario.Password = string(hashed)
 	usuario.Role = rol
 
-	fmt.Println(usuario)
 	models.Dbcon.Create(&usuario)
 	datos["mensajeflash"] = "Usuario " + usuario.Username + " creado exitosamente"
 	return c.Render(http.StatusOK, "crearusuario", datos)
@@ -109,7 +122,7 @@ func Checklogin(c echo.Context) error {
 	var usuario models.User
 	email := c.FormValue("email")
 	password := c.FormValue("password")
-	fmt.Print("Login: ", email)
+
 	models.Dbcon.Where("email = ?", email).Find(&usuario)
 	datos := echo.Map{
 		"title":        views.Comunes.Title,
@@ -117,6 +130,11 @@ func Checklogin(c echo.Context) error {
 		"role":         "",
 		"mensajeflash": "",
 	}
+	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
+		datos["mensajeflash"] = "Este sistema sólo es para humanos"
+		return c.Render(http.StatusOK, "login", datos)
+	}
+
 	fmt.Println(datos)
 	if len(usuario.Email) < 1 {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
@@ -126,7 +144,7 @@ func Checklogin(c echo.Context) error {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
 		return c.Render(http.StatusOK, "login", datos)
 	}
-	fmt.Print("Login: Successful")
+	fmt.Println("Login: Successful")
 	datos["user"] = usuario.Username
 	var rol models.Role
 	models.Dbcon.Where("id = ?", usuario.RoleID).Find(&rol)
@@ -207,4 +225,23 @@ func ValidateToken(token string) interface{} {
 	udatos["Role"] = roleString
 
 	return udatos
+}
+
+func validateCaptcha(grecaptcha string) bool {
+	formData := url.Values{
+		"secret":   {SITEKEY},
+		"response": {grecaptcha},
+	}
+	fmt.Println("FormData - g-validation: ", formData)
+	gurl := "https://www.google.com/recaptcha/api/siteverify"
+	resp, err := http.PostForm(gurl, formData)
+	if err != nil {
+		fmt.Println("FATAL ERROR: Recaptcha validation error")
+		return false
+	}
+	var resultado map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&resultado)
+	fmt.Println(resultado["success"])
+	valido := resultado["success"]
+	return valido.(bool)
 }
