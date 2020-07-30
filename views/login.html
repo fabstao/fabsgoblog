@@ -1,9 +1,8 @@
-{{ template "head.html" .Title }}
-{{ template "header.html" .Header }}
+{{ define "content" }}
 <div class="container">
-{{ if .MensajeFlash }}
+{{ if .mensajeflash }}
 <div class="alert alert-danger" role="alert">
-{{ .MensajeFlash }}
+{{ .mensajeflash }}
 </div>
 {{ end }}
 <h3>Entrar con usuario y contraseña</h3>
@@ -33,4 +32,4 @@
      document.getElementById("flogin").submit();
    }
  </script>
-{{ template "footer.html" .Footer }}
+{{ end }}

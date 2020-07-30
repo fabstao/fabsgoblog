@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/labstack/echo"
-	"gitlab.com/fabstao/fabsgoblog/views"
 )
 
 //var cookie http.Cookie
+
+// FrontData echo.Map type trying to apply DRY
+var FrontData echo.Map
 
 // Titulo for PageRender
 type Titulo struct {
@@ -44,27 +46,15 @@ func Inicio(c echo.Context) error {
 	clamas := ValidateToken(token).(map[string]string)
 	fmt.Println("Empezando Blog...")
 	fmt.Println(clamas)
-	var datos struct {
-		Title  string
-		Header Titulo
-		Body   []string
-		Footer string
-		User   string
-		Role   string
+	datos := echo.Map{
+		"title": "Fabs Blog",
+		"user":  "",
+		"role":  "",
 	}
-	datos.Header = Titulo{
-		"Fabs BLOG",
-		"",
-		"",
-	}
-	datos.Header.Title = views.Comunes.Title
-	datos.Footer = views.Comunes.Footer
-	datos.Header.User = clamas["User"]
-	datos.Header.Role = clamas["Role"]
-	datos.Body = append(datos.Body, "Item 1")
-	datos.Body = append(datos.Body, "Item 2")
-	datos.Body = append(datos.Body, "Item 3")
-	return c.Render(http.StatusOK, "index.html", datos)
+
+	datos["user"] = clamas["User"]
+	datos["role"] = clamas["Role"]
+	return c.Render(http.StatusOK, "index", datos)
 }
 
 // Hello REST example

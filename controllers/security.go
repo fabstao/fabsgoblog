@@ -14,6 +14,8 @@ import (
 )
 
 var cookie http.Cookie
+
+// Secret : change here for all JWT signing
 var Secret = "Tequ1squiapan"
 
 // PToken share token with middleware
@@ -21,68 +23,49 @@ var PToken string
 
 // Login Handler
 func Login(c echo.Context) error {
-	datos := PageRender{
-		Header: Titulo{
-			views.Comunes.Title,
-			"",
-			"",
-		},
-		Title:        views.Comunes.Header,
-		Footer:       views.Comunes.Footer,
-		MensajeFlash: "",
+	datos := echo.Map{
+		"title":        views.Comunes.Title,
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
 	}
-	return c.Render(http.StatusOK, "login.html", datos)
+	return c.Render(http.StatusOK, "login", datos)
 }
 
 // Logout - destroy session
 func Logout(c echo.Context) error {
-	datos := PageRender{
-		Header: Titulo{
-			views.Comunes.Title,
-			"",
-			"",
-		},
-		Title:        views.Comunes.Header,
-		Footer:       views.Comunes.Footer,
-		MensajeFlash: "",
+	datos := echo.Map{
+		"title":        views.Comunes.Title,
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
 	}
 	dcookie, _ := c.Cookie("frontends1")
 	dcookie.Value = ""
 	dcookie.Expires = time.Now()
 	dcookie.Domain = ""
 	c.SetCookie(dcookie)
-	return c.Render(http.StatusOK, "index.html", datos)
+	return c.Render(http.StatusOK, "index", datos)
 }
 
 // Nuevo - controlador para formulario nuevo usuario
 func Nuevo(c echo.Context) error {
-	datos := PageRender{
-		Username: "",
-		Header: Titulo{
-			views.Comunes.Title,
-			"",
-			"",
-		},
-		Title:        views.Comunes.Header,
-		Footer:       views.Comunes.Footer,
-		MensajeFlash: "",
+	datos := echo.Map{
+		"title":        views.Comunes.Title,
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
 	}
-	return c.Render(http.StatusOK, "crearusuario.html", datos)
+	return c.Render(http.StatusOK, "crearusuario", datos)
 }
 
 // Crear usuario
 func Crear(c echo.Context) error {
-	datos := PageRender{
-		Username: "",
-		Header: Titulo{
-			views.Comunes.Title,
-			"",
-			"",
-		},
-		Title:        views.Comunes.Header,
-		Footer:       views.Comunes.Footer,
-		MensajeFlash: "",
-		Alerta:       "success",
+	datos := echo.Map{
+		"title":        views.Comunes.Title,
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
 	}
 	var usuario models.User
 	var checausuario models.User
@@ -90,21 +73,21 @@ func Crear(c echo.Context) error {
 	user := c.FormValue("usuario")
 	email := c.FormValue("email")
 	if len(user) < 4 || len(email) < 4 {
-		datos.MensajeFlash = "Usuario y correo no pueden estar vacíos o demasiado cortos"
-		datos.Alerta = "danger"
-		return c.Render(http.StatusOK, "crearusuario.html", datos)
+		datos["mensajeflash"] = "Usuario y correo no pueden estar vacíos o demasiado cortos"
+		datos["alerta"] = "danger"
+		return c.Render(http.StatusOK, "crearusuario", datos)
 	}
 	models.Dbcon.Where("username = ?", user).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
-		datos.MensajeFlash = "Usuario ya existe: " + user
-		datos.Alerta = "danger"
-		return c.Render(http.StatusOK, "crearusuario.html", datos)
+		datos["mensajeflash"] = "Usuario ya existe: " + user
+		datos["alerta"] = "danger"
+		return c.Render(http.StatusOK, "crearusuario", datos)
 	}
 	models.Dbcon.Where("email = ?", email).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
-		datos.MensajeFlash = "Dirección de correo-e ya existe: " + email
-		datos.Alerta = "danger"
-		return c.Render(http.StatusOK, "crearusuario.html", datos)
+		datos["mensajeflash"] = "Dirección de correo-e ya existe: " + email
+		datos["alerta"] = "danger"
+		return c.Render(http.StatusOK, "crearusuario", datos)
 	}
 	models.Dbcon.Where("role = ?", "usuario").Find(&rol)
 	usuario.Username = user
@@ -115,8 +98,8 @@ func Crear(c echo.Context) error {
 
 	fmt.Println(usuario)
 	models.Dbcon.Create(&usuario)
-	datos.MensajeFlash = "Usuario " + usuario.Username + " creado exitosamente"
-	return c.Render(http.StatusOK, "crearusuario.html", datos)
+	datos["mensajeflash"] = "Usuario " + usuario.Username + " creado exitosamente"
+	return c.Render(http.StatusOK, "crearusuario", datos)
 }
 
 // Checklogin POST verificar login
@@ -126,27 +109,23 @@ func Checklogin(c echo.Context) error {
 	password := c.FormValue("password")
 	fmt.Print("Login: ", email)
 	models.Dbcon.Where("email = ?", email).Find(&usuario)
-	datos := PageRender{
-		Header: Titulo{
-			views.Comunes.Title,
-			"",
-			"",
-		},
-		Title:        views.Comunes.Header,
-		Footer:       views.Comunes.Footer,
-		MensajeFlash: "",
+	datos := echo.Map{
+		"title":        views.Comunes.Title,
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
 	}
 	fmt.Println(datos)
 	if len(usuario.Email) < 1 {
-		datos.MensajeFlash = "Correo-e o contraseña incorrectos"
-		return c.Render(http.StatusOK, "login.html", datos)
+		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
+		return c.Render(http.StatusOK, "login", datos)
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(usuario.Password), []byte(password)); err != nil {
-		datos.MensajeFlash = "Correo-e o contraseña incorrectos"
-		return c.Render(http.StatusOK, "login.html", datos)
+		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
+		return c.Render(http.StatusOK, "login", datos)
 	}
 	fmt.Print("Login: Successful")
-	datos.Header.User = usuario.Username
+	datos["user"] = usuario.Username
 	var rol models.Role
 	models.Dbcon.Where("id = ?", usuario.RoleID).Find(&rol)
 	var err error
@@ -160,7 +139,7 @@ func Checklogin(c echo.Context) error {
 	cookie.Domain = "localhost"
 	c.SetCookie(&cookie)
 	fmt.Println(usuario)
-	return c.Render(http.StatusOK, "index.html", datos)
+	return c.Render(http.StatusOK, "index", datos)
 }
 
 // CrearToken debe ser reusable

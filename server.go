@@ -1,18 +1,16 @@
 package main
 
 import (
-	"html/template"
-
+	"github.com/foolin/goview/supports/echoview"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"gitlab.com/fabstao/fabsgoblog/controllers"
 	"gitlab.com/fabstao/fabsgoblog/models"
-	"gitlab.com/fabstao/fabsgoblog/views"
 )
 
 func main() {
 	// Initial vars
-	templatesDir := "views/templates/*.html"
+	//templatesDir := "views/templates/*.html"
 
 	// Inicializar capa de datos
 	models.DbConnect()
@@ -29,11 +27,13 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Views/templates
-	t := &views.Template{
+	/*t := &views.Template{
 		Templates: template.Must(template.ParseGlob(templatesDir)),
 	}
 
-	e.Renderer = t
+	e.Renderer = t */
+
+	e.Renderer = echoview.Default()
 
 	// echo ROUTER (declare HTTP verbs here: GET, PUT, POST, DELETE)
 	e.GET("/", controllers.Inicio)
