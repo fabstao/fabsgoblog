@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"strings"
 	"time"
@@ -66,6 +67,7 @@ func Crear(c echo.Context) error {
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
+		"alerta":       template.HTML("\"alert alert-success\""),
 	}
 	var usuario models.User
 	var checausuario models.User
@@ -74,19 +76,19 @@ func Crear(c echo.Context) error {
 	email := c.FormValue("email")
 	if len(user) < 4 || len(email) < 4 {
 		datos["mensajeflash"] = "Usuario y correo no pueden estar vacíos o demasiado cortos"
-		datos["alerta"] = "danger"
+		datos["alerta"] = "\"alert alert-danger\""
 		return c.Render(http.StatusOK, "crearusuario", datos)
 	}
 	models.Dbcon.Where("username = ?", user).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Usuario ya existe: " + user
-		datos["alerta"] = "danger"
+		datos["alerta"] = "\"alert alert-danger\""
 		return c.Render(http.StatusOK, "crearusuario", datos)
 	}
 	models.Dbcon.Where("email = ?", email).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Dirección de correo-e ya existe: " + email
-		datos["alerta"] = "danger"
+		datos["alerta"] = "\"alert alert-danger\""
 		return c.Render(http.StatusOK, "crearusuario", datos)
 	}
 	models.Dbcon.Where("role = ?", "usuario").Find(&rol)
