@@ -2,8 +2,11 @@ package models
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/bcrypt"
+
 	// Separando roles en MVC
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
@@ -39,6 +42,19 @@ func MigrarModelos() {
 		roleu.Role = "usuario"
 		Dbcon.Create(&roleu)
 	}
+	var miadmin User
+	padmin := os.Getenv("PASSWD_ADMIN")
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(padmin), bcrypt.DefaultCost)
+	cuenta = 0
+	Dbcon.Where("username = ?", "admin").Find(&miadmin).Count(&cuenta)
+	if cuenta < 1 {
+		miadmin.Username = "admin"
+		miadmin.Role = rolea
+		miadmin.Password = string(hashed)
+		miadmin.Email = "soporte@koalatechie.com"
+		Dbcon.Create(&miadmin)
+	}
+
 	fmt.Println("Modelos migrados ")
 }
 

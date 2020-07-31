@@ -150,6 +150,7 @@ func Checklogin(c echo.Context) error {
 	models.Dbcon.Where("id = ?", usuario.RoleID).Find(&rol)
 	var err error
 	PToken, err = CrearToken(usuario.Username, rol.Role)
+	datos["role"] = rol.Role
 	if err != nil {
 		return err
 	}
@@ -158,7 +159,8 @@ func Checklogin(c echo.Context) error {
 	cookie.Expires = time.Now().Add(15 * time.Minute)
 	cookie.Domain = "localhost"
 	c.SetCookie(&cookie)
-	fmt.Println(usuario)
+	fmt.Println("Logged in as: ", usuario.Username)
+	fmt.Println("Role: ", rol.Role)
 	return c.Render(http.StatusOK, "index", datos)
 }
 
