@@ -46,14 +46,18 @@ func Logout(c echo.Context) error {
 		"role":         "",
 		"mensajeflash": "",
 	}
-	dcookie, err := c.Cookie("frontends1")
-	if err == nil {
-		dcookie.Value = ""
-		dcookie.Expires = time.Now()
-		dcookie.Domain = ""
+	fmt.Println("Attempting to logout user")
+	cookie, err := c.Cookie("frontends1")
+	if err != nil {
+		fmt.Println("WARNING: Cookie could not be read: ", err)
+		cookie.Name = "frontends1"
 	}
-	c.SetCookie(dcookie)
-	return c.Render(http.StatusOK, "index", datos)
+	cookie.Value = ""
+	cookie.Expires = time.Now()
+	cookie.Domain = ""
+	c.SetCookie(cookie)
+	return c.Render(http.StatusOK, "bye", datos)
+	//return c.Redirect(http.StatusMovedPermanently, "/")
 }
 
 // Nuevo - controlador para formulario nuevo usuario
@@ -161,7 +165,8 @@ func Checklogin(c echo.Context) error {
 	c.SetCookie(&cookie)
 	fmt.Println("Logged in as: ", usuario.Username)
 	fmt.Println("Role: ", rol.Role)
-	return c.Render(http.StatusOK, "index", datos)
+	return c.Redirect(http.StatusMovedPermanently, "/")
+	//return c.Render(http.StatusOK, "index", datos)
 }
 
 // CrearToken debe ser reusable
