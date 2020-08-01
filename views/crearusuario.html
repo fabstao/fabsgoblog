@@ -7,25 +7,29 @@
     </div>
   {{ end }}
   <h3>Nuevo usuario</h3>
-  <form action="/cuenta" method="POST" id="crearusuario">
+  <form action="/cuenta" method="POST" id="crearusuario" onSubmit="return valida(event)">
     <table class="table">
     <tr>
-    <td><strong>Usuario: </strong></td><td><input type="text" size="38" max="200" id="usuario" name="usuario" required/></td>
+    <td><strong>Usuario: </strong></td><td><input type="text" size="38" max="200" id="usuario" name="usuario" 
+     pattern="[a-zA-Z0-9]+" minlength="6" title="Mínimo 6 caracteres para el usuario, no usar espacios ni caracteres especiales"
+      required/></td>
     </tr>
     <tr>
     <td><strong>E-mail: </strong></td><td><input type="email" size="38"
-    max="200" id="email" name="email" required placeholder="Ingrese una dirección de correo válida"/></td>
+    max="200" id="email" name="email" title="Por favor introduzca una dirección de correo válida"
+    required placeholder="Ingrese una dirección de correo válida"/></td>
     </tr>
     <tr>
-    <td><strong>Password </strong></td><td><input type="password" size="38" max="15" id="password" name="password" required/></td>
+    <td><strong>Password </strong></td><td><input type="password" size="38" 
+      max="15" id="password" name="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}" title="Mínimo 6 caracteres, usar minúsculas, números y mayúsculas" 
+      required/></td>
     </tr>
     <tr>
     <td></td>
     <td><button class="g-recaptcha" 
             data-sitekey="6LdR07EZAAAAALAANQF1zzAlKrbyZ5ubaI2LzC3c" 
             data-callback='onSubmit' 
-            data-action='submit'>Crear</button></td>
-    <!-- <td><input type="submit" max="15" value="Crear" /></td> -->
+            data-action='submit' id='enviar' type='submit'>Crear</button></td>
     </tr>
     </table>
   </form>
@@ -37,6 +41,19 @@
   </p>
   <script src="https://www.google.com/recaptcha/api.js"></script>
   <script>
+    var boton = document.getElementById("enviar");
+    var usuario = document.getElementById("usuario");
+    var correo = document.getElementById("email");
+    var contras = document.getElementById("password");
+    function valida(e){
+      e.preventDefault();
+      if(!usuario.checkValidity() || !correo.checkValidity() || !contras.checkValidity()) {
+          alert("Error en el formulario");
+          boton.disabled = true;
+          return false;
+      }
+      return true;
+    }
     function onSubmit(token) {
       document.getElementById("crearusuario").submit();
     }

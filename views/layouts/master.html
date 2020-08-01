@@ -1,8 +1,11 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <title>{{  .title  }}</title>
 {{ include "layouts/head" }}
+<style scoped>
+	input:invalid, textarea:invalid { color: red; }
+</style>
 </head>
 <body class="container">
 <header>

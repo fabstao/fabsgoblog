@@ -57,7 +57,6 @@ func Logout(c echo.Context) error {
 	cookie.Domain = ""
 	c.SetCookie(cookie)
 	return c.Render(http.StatusOK, "bye", datos)
-	//return c.Redirect(http.StatusMovedPermanently, "/")
 }
 
 // Nuevo - controlador para formulario nuevo usuario
