@@ -3,12 +3,12 @@
 ## TODO
 
 * ~Add Database and ORM support~
-* Add PostgreSQL support
+* ~Add PostgreSQL support~
 * Develop Models - in progress
 * Add Basic Auth - in progress
 * ~Add Captcha protection~
 * Add e-mail validation workflow
-* Add Posts and comments forms
+* Add Posts and comments forms - in progress
 
 ## Author
 
