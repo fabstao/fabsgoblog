@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo"
+	"gitlab.com/fabstao/fabsgoblog/models"
 )
 
 //var cookie http.Cookie
@@ -45,7 +47,6 @@ func Inicio(c echo.Context) error {
 
 	clamas := ValidateToken(token).(map[string]string)
 	fmt.Println("Empezando Blog...")
-	fmt.Println(clamas)
 	datos := echo.Map{
 		"title": "Fabs Blog",
 		"user":  "",
@@ -54,7 +55,146 @@ func Inicio(c echo.Context) error {
 
 	datos["user"] = clamas["User"]
 	datos["role"] = clamas["Role"]
+	type tsposts struct {
+		ID     uint
+		Fecha  string
+		Titulo string
+		Autor  string
+		User   string
+	}
+	spost := tsposts{
+		ID:     0,
+		Fecha:  "",
+		Titulo: "",
+		Autor:  "",
+		User:   clamas["User"],
+	}
+	var sposts []tsposts
+	var posts []models.Post
+	models.Dbcon.Find(&posts).Limit(10)
+	var autor models.User
+	for k, v := range posts {
+		sposts = append(sposts, spost)
+		models.Dbcon.Where("id = ?", v.UserID).Find(&autor)
+		sposts[k].ID = v.ID
+		sposts[k].Titulo = v.Titulo
+		sposts[k].Autor = autor.Username
+		sposts[k].Fecha = v.UpdatedAt.String()
+	}
+	datos["entradas"] = sposts
 	return c.Render(http.StatusOK, "index", datos)
+}
+
+// Show - Show post form - anyone can read
+func Show(c echo.Context) error {
+	token := "null"
+	if vcookie, err := c.Cookie("frontends1"); err != nil {
+		fmt.Println("ERROR reading cookie: ", err)
+	} else {
+		token = vcookie.Value
+		fmt.Println("TOKEN - index: ", token)
+		vcookie.Expires = time.Now().Add(15 * time.Minute)
+		c.SetCookie(vcookie)
+	}
+	clamas := ValidateToken(token).(map[string]string)
+	datos := echo.Map{
+		"title":        "Fabs Blog",
+		"mensajeflash": "",
+	}
+	datos["user"] = clamas["User"]
+	datos["role"] = clamas["Role"]
+	var post models.Post
+	var autor models.User
+	pid := c.ParamNames()
+	fmt.Println(pid)
+	pidv := c.ParamValues()
+	models.Dbcon.Where("id = ?", pidv[0]).Find(&post)
+	models.Dbcon.Where("id = ?", post.UserID).Find(&autor)
+	datos["titulo"] = post.Titulo
+	datos["mitexto"] = post.Texto
+	datos["autor"] = autor.Username
+	datos["fecha"] = post.UpdatedAt.String()
+	return c.Render(http.StatusOK, "show", datos)
+}
+
+// Post - New post form
+func Post(c echo.Context) error {
+	token := "null"
+	if vcookie, err := c.Cookie("frontends1"); err != nil {
+		fmt.Println("ERROR reading cookie: ", err)
+	} else {
+		token = vcookie.Value
+		fmt.Println("TOKEN - index: ", token)
+		vcookie.Expires = time.Now().Add(15 * time.Minute)
+		c.SetCookie(vcookie)
+	}
+
+	clamas := ValidateToken(token).(map[string]string)
+	fmt.Println("Empezando Blog...")
+	fmt.Println(clamas)
+	datos := echo.Map{
+		"title":        "Fabs Blog",
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
+	}
+
+	datos["user"] = clamas["User"]
+	datos["role"] = clamas["Role"]
+	return c.Render(http.StatusOK, "new", datos)
+}
+
+// New post
+func New(c echo.Context) error {
+	token := "null"
+	datos := echo.Map{
+		"title":        "Fabs Blog",
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
+		"alerta":       template.HTML("alert alert-success"),
+	}
+	if vcookie, err := c.Cookie("frontends1"); err != nil {
+		fmt.Println("ERROR reading cookie: ", err)
+		return c.Render(http.StatusForbidden, "login", datos)
+	} else {
+		token = vcookie.Value
+		fmt.Println("TOKEN - index: ", token)
+		vcookie.Expires = time.Now().Add(15 * time.Minute)
+		c.SetCookie(vcookie)
+	}
+
+	clamas := ValidateToken(token).(map[string]string)
+
+	datos["user"] = clamas["User"]
+	datos["role"] = clamas["Role"]
+
+	var usuario models.User
+	var post models.Post
+	titulo := c.FormValue("titulo")
+	texto := c.FormValue("texto")
+
+	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
+		datos["mensajeflash"] = "Este sistema sólo es para humanos"
+		datos["alerta"] = template.HTML("alert alert-danger")
+		return c.Render(http.StatusForbidden, "login", datos)
+	}
+
+	if len(titulo) < 4 || len(texto) < 4 {
+		datos["mensajeflash"] = "Título o texto demasiado cortos"
+		datos["alerta"] = template.HTML("alert alert-danger")
+		return c.Render(http.StatusOK, "new", datos)
+	}
+
+	post.Titulo = titulo
+	post.Texto = texto
+	models.Dbcon.Where("username = ?", datos["user"].(string)).Find(&usuario)
+	post.User = usuario
+	models.Dbcon.Create(&post)
+	datos["mensajeflash"] = "Entrada " + post.Titulo + " creada exitosamente"
+	datos["titulo"] = titulo
+	datos["texto"] = texto
+	return c.Render(http.StatusOK, "new", datos)
 }
 
 // Hello REST example

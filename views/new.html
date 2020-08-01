@@ -1,0 +1,46 @@
+
+{{ define "content" }}
+  <div class="container">
+  {{ if .mensajeflash }}
+    <div class="{{ .alerta }}" role="alert">
+  {{ .mensajeflash }}
+    </div>
+  {{ end }}
+  {{ if .user }}
+  <h3>Nueva Entrada</h3>
+  <form action="/new" method="POST" id="newpost">
+    <table class="table">
+    <tr>
+    <td><strong>Título: </strong></td><td><input type="text" size="38" max="200" id="titulo" name="titulo" required value="{{ .titulo }}"/></td>
+    </tr>
+    <tr>
+    <td><strong>Texto: </strong></td><td><textarea rows="20" cols="55" id="texto"
+     name="texto" required spellcheck="true" minlength="10" maxlength="255">Texto con Markdown</textarea></td>
+    </tr>
+    <tr>
+    <td></td>
+    <td><button class="g-recaptcha" 
+            data-sitekey="6LdR07EZAAAAALAANQF1zzAlKrbyZ5ubaI2LzC3c" 
+            data-callback='onSubmit' 
+            data-action='submit'>Crear</button></td>
+    <!-- <td><input type="submit" max="15" value="Crear" /></td> -->
+    </tr>
+    </table>
+  </form>
+  </div>
+  <p>
+  {{ end }}
+  </p>
+  <script src="https://www.google.com/recaptcha/api.js"></script>
+  <script>
+    function onSubmit(token) {
+      document.getElementById("newpost").submit();
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+  <script>
+      var simplemde = new SimpleMDE({ element: document.getElementById("texto") });
+      simplemde.value("{{ .texto }}");
+  </script>
+  
+{{ end }}

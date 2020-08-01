@@ -1,5 +1,21 @@
 {{ define "content" }}
 <p>
-<h2>BIENVENIDA/O A FABSGOBLOG</h2>
+<h3>BIENVENIDA/O A FABSGOBLOG</h3>
 </p>
+<div class="container">
+<table class="table">
+    <tr>
+    <th>Título</th><th>Autor</th>{{ if .user }}<th>Editar</th><th>Borrar</th>{{ end }}
+    </tr>
+    {{ range .entradas }}
+    <tr>
+        <td><a href="/show/{{.ID}}"><strong>{{ .Titulo }}</strong></a></td><td>{{ .Autor }}</td>
+        {{ if eq .User .Autor }}
+        <td><a href="/edit/{{.ID}}">E</a></td>
+        <td><a href="/delete/{{.ID}}" onclick='return confirm("¿Estás seguro de borrar?")'>X</a></td>
+        {{ end }}
+    </tr>
+    {{ end }}
+    </table>
+</div>
 {{ end }}

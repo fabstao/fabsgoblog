@@ -51,8 +51,11 @@ func main() {
 	e.GET("/login", controllers.Login)
 	e.GET("/logout", controllers.Logout)
 	e.GET("/cuenta", controllers.Nuevo)
+	e.GET("/new", controllers.Post)
+	e.GET("/show/:id", controllers.Show)
 	e.POST("/cuenta", controllers.Crear)
 	e.POST("/login", controllers.Checklogin)
+	e.POST("/new", controllers.New)
 
 	//h := e.Group("/admin")
 	//h.GET("/index", controllers.Inicio)

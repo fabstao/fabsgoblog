@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	// Separando roles en MVC
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
@@ -17,7 +18,14 @@ var Dbcon *gorm.DB
 // DbConnect llamar para conectar a base de datos
 func DbConnect() {
 	var err error
-	if Dbcon, err = gorm.Open("sqlite3", "fabsgoblog.db"); err != nil {
+	dbhost := os.Getenv("DBHOST")
+	dbport := os.Getenv("DBPORT")
+	dbname := os.Getenv("DBNAME")
+	dbuser := os.Getenv("DBUSER")
+	dbpasswd := os.Getenv("DBPASSWD")
+	dburl := "host=" + dbhost + " port=" + dbport + " user=" + dbuser + " dbname=" + dbname + " password=" + dbpasswd + " sslmode=disable"
+
+	if Dbcon, err = gorm.Open("postgres", dburl); err != nil {
 		panic("Falló la conexión a la base de datos")
 	}
 	fmt.Println("Conexión a la base de datos exitosa")

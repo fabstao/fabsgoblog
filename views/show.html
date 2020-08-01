@@ -1,0 +1,12 @@
+{{ define "content" }}
+<div class="container">
+<h3>{{ .titulo }}</h3>
+<p>Autor: {{ .autor }} creado en: {{ .fecha }}</p><br />
+<div class="container" id="eltexto"></div>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    document.getElementById('eltexto').innerHTML =
+      marked('{{ .mitexto }}');
+  </script>
+</div>
+{{ end }}
