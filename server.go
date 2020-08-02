@@ -16,7 +16,8 @@ func main() {
 	// Initial vars
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		//log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 	controllers.SITEKEY = os.Getenv("SITEKEY")
 	controllers.Secret = os.Getenv("FGOSECRET")
