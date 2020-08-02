@@ -9,6 +9,7 @@
 * ~Add Captcha protection~
 * Add e-mail validation workflow
 * Add Posts and comments forms - in progress
+* ~Add Docker support~
 
 ## Author
 
