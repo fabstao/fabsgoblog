@@ -1,4 +1,17 @@
 {{ define "content" }}
+<script>
+function validar(e) {
+  e.preventDefault(); 
+  laforma = document.getElementById("flogin");
+  correo = document.getElementById("email");
+  contrasena = document.getElementById("password");
+  if( contrasena.checkValidity() &&  correo.checkValidity() ){
+    laforma.submit();
+  } else {
+    alert("Errores en los campos");
+  }
+}
+</script>
 <div class="container">
 {{ if .mensajeflash }}
 <div class="alert alert-danger" role="alert">
@@ -10,10 +23,12 @@
     <form action="/login" method="POST" id="flogin">
     <table class="table">
     <tr>
-    <td><strong>Correo-e: </strong></td><td><input type="email" min="4" max="200" id="email" name="email" placeholder="Ingrese una dirección de correo válida" /></td>
+    <td><strong>Correo-e: </strong></td><td><input type="email" min="5" max="200" id="email" 
+      name="email" placeholder="Ingrese una dirección de correo válida" required/></td>
     </tr>
     <tr>
-    <td><strong>Password </strong></td><td><input type="Password" min="8" max="15" id="password" name="password"/></td>
+    <td><strong>Password </strong></td><td><input type="Password" min="6" max="20" 
+      id="password" name="password" required/></td>
     </tr>
     <tr>
     <td></td><td><button class="g-recaptcha" 
@@ -29,7 +44,8 @@
 <script src="https://www.google.com/recaptcha/api.js"></script>
 <script>
    function onSubmit(token) {
-     document.getElementById("flogin").submit();
+     //document.getElementById("flogin").submit();
+     validar(event);
    }
  </script>
 {{ end }}
