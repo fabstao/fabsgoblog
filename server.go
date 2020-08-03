@@ -21,6 +21,7 @@ func main() {
 	}
 	controllers.SITEKEY = os.Getenv("SITEKEY")
 	controllers.Secret = os.Getenv("FGOSECRET")
+	controllers.Cdomain = os.Getenv("CDOMAIN")
 
 	//templatesDir := "views/templates/*.html"
 

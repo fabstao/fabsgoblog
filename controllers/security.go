@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Security types, vars and configuration
 var cookie http.Cookie
 
 // Secret : change here for all JWT signing
@@ -26,6 +27,9 @@ var SITEKEY string
 
 // PToken share token with middleware
 var PToken string
+
+// Cdomain - domain for session cookie
+var Cdomain string
 
 // Login Handler
 func Login(c echo.Context) error {
@@ -160,7 +164,7 @@ func Checklogin(c echo.Context) error {
 	cookie.Name = "frontends1"
 	cookie.Value = strings.TrimSpace(PToken)
 	cookie.Expires = time.Now().Add(15 * time.Minute)
-	cookie.Domain = "raketo.info"
+	cookie.Domain = Cdomain
 	c.SetCookie(&cookie)
 	fmt.Println("Logged in as: ", usuario.Username)
 	fmt.Println("Role: ", rol.Role)
