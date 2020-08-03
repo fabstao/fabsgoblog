@@ -160,7 +160,7 @@ func Checklogin(c echo.Context) error {
 	cookie.Name = "frontends1"
 	cookie.Value = strings.TrimSpace(PToken)
 	cookie.Expires = time.Now().Add(15 * time.Minute)
-	cookie.Domain = "localhost"
+	cookie.Domain = "raketo.info"
 	c.SetCookie(&cookie)
 	fmt.Println("Logged in as: ", usuario.Username)
 	fmt.Println("Role: ", rol.Role)
