@@ -1,0 +1,18 @@
+<table class="table">
+    <tr>
+    <td><strong>Título: </strong></td><td><input type="text" size="38" max="200" id="titulo" 
+    name="titulo" required value="{{ .titulo }}"/></td>
+    </tr>
+    <tr>
+    <td><strong>Texto: </strong></td><td><textarea rows="20" cols="55" id="texto"
+     name="texto" required spellcheck="true" minlength="10" maxlength="255">Texto con Markdown</textarea></td>
+    </tr>
+    <tr>
+    <td></td>
+    <td><button class="g-recaptcha" 
+            data-sitekey="6LdR07EZAAAAALAANQF1zzAlKrbyZ5ubaI2LzC3c" 
+            data-callback='onSubmit' 
+            data-action='submit'>Guardar</button></td>
+    <!-- <td><input type="submit" max="15" value="Crear" /></td> -->
+    </tr>
+    </table>

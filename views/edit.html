@@ -7,9 +7,10 @@
     </div>
   {{ end }}
   {{ if .user }}
-  <h3>Nueva Entrada</h3>
-  <form action="/new" method="POST" id="newpost">
+  <h3>Editar Entrada</h3>
+  <form action="/edit" method="POST" id="editpost">
   {{ include "layouts/form"  }}
+    <input type="hidden" value="{{ .pid }}" name="pid" id="pid" />
   </form>
   </div>
   <p>
@@ -18,13 +19,13 @@
   <script src="https://www.google.com/recaptcha/api.js"></script>
   <script>
     function onSubmit(token) {
-      document.getElementById("newpost").submit();
+      document.getElementById("editpost").submit();
     }
   </script>
   <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
   <script>
       var simplemde = new SimpleMDE({ element: document.getElementById("texto") });
-      simplemde.value("{{ .texto }}");
+      simplemde.value("{{ .mitexto }}");
   </script>
   
 {{ end }}
