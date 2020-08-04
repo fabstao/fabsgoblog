@@ -56,6 +56,7 @@ func main() {
 	e.GET("/new", controllers.Post)
 	e.GET("/show/:id", controllers.Show)
 	e.GET("/edit/:id", controllers.Edit)
+	e.GET("/delete/:id", controllers.Delete)
 
 	e.POST("/cuenta", controllers.Crear)
 	e.POST("/login", controllers.Checklogin)

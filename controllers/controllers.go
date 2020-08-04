@@ -80,6 +80,7 @@ func Inicio(c echo.Context) error {
 		sposts[k].Titulo = v.Titulo
 		sposts[k].Autor = autor.Username
 		sposts[k].Fecha = v.UpdatedAt.String()
+		autor = models.User{}
 	}
 	datos["entradas"] = sposts
 	return c.Render(http.StatusOK, "index", datos)
@@ -105,8 +106,7 @@ func Show(c echo.Context) error {
 	datos["role"] = clamas["Role"]
 	var post models.Post
 	var autor models.User
-	pid := c.ParamNames()
-	fmt.Println(pid)
+	//pid := c.ParamNames()
 	pidv := c.ParamValues()
 	models.Dbcon.Where("id = ?", pidv[0]).Find(&post)
 	models.Dbcon.Where("id = ?", post.UserID).Find(&autor)
@@ -114,6 +114,10 @@ func Show(c echo.Context) error {
 	datos["mitexto"] = post.Texto
 	datos["autor"] = autor.Username
 	datos["fecha"] = post.UpdatedAt.String()
+	datos["pid"] = pidv[0]
+	if datos["user"] == autor.Username {
+		datos["editar"] = true
+	}
 	return c.Render(http.StatusOK, "show", datos)
 }
 
@@ -166,6 +170,7 @@ func New(c echo.Context) error {
 
 	clamas := ValidateToken(token).(map[string]string)
 
+	fmt.Println("User: ", clamas["User"])
 	datos["user"] = clamas["User"]
 	datos["role"] = clamas["Role"]
 
@@ -291,6 +296,35 @@ func Update(c echo.Context) error {
 	datos["mitexto"] = texto
 	datos["pid"] = pid
 	return c.Render(http.StatusOK, "edit", datos)
+}
+
+// Delete - danger, take care
+func Delete(c echo.Context) error {
+	token := "null"
+	if vcookie, err := c.Cookie("frontends1"); err != nil {
+		fmt.Println("ERROR reading cookie: ", err)
+	} else {
+		token = vcookie.Value
+		fmt.Println("TOKEN - index: ", token)
+		vcookie.Expires = time.Now().Add(15 * time.Minute)
+		c.SetCookie(vcookie)
+	}
+	clamas := ValidateToken(token).(map[string]string)
+	datos := echo.Map{
+		"title":        "Fabs Blog",
+		"mensajeflash": "ERROR borrando entrada",
+		"alerta":       template.HTML("alert alert-danger"),
+	}
+	datos["user"] = clamas["User"]
+	datos["role"] = clamas["Role"]
+	var post models.Post
+	//pid := c.ParamNames()
+	pidv := c.ParamValues()
+	models.Dbcon.Where("id = ?", pidv[0]).Find(&post)
+	models.Dbcon.Unscoped().Delete(&post)
+	datos["mensajeflash"] = "Entrada borrada correctamente"
+	datos["alerta"] = template.HTML("alert alert-success")
+	return c.Render(http.StatusOK, "index", datos)
 }
 
 // Hello REST example

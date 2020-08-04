@@ -1,8 +1,11 @@
 {{ define "content" }}
-<p>
-<h3>BIENVENIDA/O A FABSGOBLOG</h3>
-</p>
 <div class="container">
+{{ if .mensajeflash }}
+    <div class="{{ .alerta }}" role="alert">
+  {{ .mensajeflash }}
+    </div>
+  {{ end }}
+{{ if .entradas }}
 <table class="table">
     <tr>
     <th>Título</th><th>Autor</th>{{ if .user }}<th>Editar</th><th>Borrar</th>{{ end }}
@@ -17,5 +20,6 @@
     </tr>
     {{ end }}
     </table>
+{{ end }}
 </div>
 {{ end }}
