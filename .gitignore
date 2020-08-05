@@ -3,4 +3,4 @@
 *.db
 *build*
 .env
-.env*
+.env.*
