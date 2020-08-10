@@ -1,6 +1,6 @@
-{{ define "content" }}
+{% block content %}
 <div class="container">
-{{ if .mensajeflash }}
+{% if .mensajeflash %}
     <div class="{{ .alerta }}" role="alert">
   {{ .mensajeflash }}
     </div>
@@ -28,4 +28,4 @@
     </table>
 {{ end }}
 </div>
-{{ end }}
+{% endblock %}

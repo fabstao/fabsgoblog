@@ -95,7 +95,7 @@ func Inicio(c *fiber.Ctx) {
 		autor = models.User{}
 	}
 	datos["entradas"] = sposts
-	c.Render("index", datos)
+	c.Status(fiber.StatusOK).Render("index", datos)
 }
 
 // Show - Show post form - anyone can read
@@ -129,7 +129,7 @@ func Show(c *fiber.Ctx) {
 	if datos["user"] == autor.Username {
 		datos["editar"] = true
 	}
-	c.Render("show", datos)
+	c.Status(fiber.StatusOK).Render("show", datos)
 }
 
 // Post - New post form
@@ -144,8 +144,7 @@ func Post(c *fiber.Ctx) {
 	}
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
-		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Status(fiber.StatusForbidden).Render("login", datos)
 		return
 	}
 	fmt.Println("TOKEN - index: ", token)
@@ -173,8 +172,7 @@ func New(c *fiber.Ctx) {
 	}
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
-		c.SendStatus(http.StatusForbidden)
-		c.Render("index", datos)
+		c.Status(fiber.StatusForbidden).Render("login", datos)
 		return
 	}
 	fmt.Println("TOKEN - index: ", token)
@@ -195,8 +193,7 @@ func New(c *fiber.Ctx) {
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Status(fiber.StatusForbidden).Render("login", datos)
 		return
 	}
 
