@@ -1,5 +1,5 @@
 
-{{ define "content" }}
+
   <div class="container">
   {{ if .mensajeflash }}
     <div class="{{ .alerta }}" role="alert">
@@ -9,7 +9,7 @@
   {{ if .user }}
   <h3>Editar Entrada</h3>
   <form action="/edit" method="POST" id="editpost">
-  {{ include "layouts/form"  }}
+  {{ template "layouts/form" . }}
     <input type="hidden" value="{{ .pid }}" name="pid" id="pid" />
   </form>
   </div>
@@ -28,4 +28,3 @@
       simplemde.value("{{ .mitexto }}");
   </script>
   
-{{ end }}

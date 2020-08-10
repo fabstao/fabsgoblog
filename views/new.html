@@ -1,5 +1,4 @@
 
-{{ define "content" }}
   <div class="container">
   {{ if .mensajeflash }}
     <div class="{{ .alerta }}" role="alert">
@@ -9,7 +8,7 @@
   {{ if .user }}
   <h3>Nueva Entrada</h3>
   <form action="/new" method="POST" id="newpost">
-  {{ include "layouts/form"  }}
+  {{ template "layouts/form"  . }}
   </form>
   </div>
   <p>
@@ -27,4 +26,3 @@
       simplemde.value("{{ .texto }}");
   </script>
   
-{{ end }}
