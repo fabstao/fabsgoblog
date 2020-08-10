@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber"
-	"github.com/robbert229/jwt"
 	"gitlab.com/fabstao/fabsgoblog/models"
 	"gitlab.com/fabstao/fabsgoblog/views"
 	"golang.org/x/crypto/bcrypt"
@@ -48,7 +48,7 @@ func Login(c *fiber.Ctx) {
 		"role":         "",
 		"mensajeflash": "",
 	}
-	c.Render("login", datos)
+	c.Render("login", datos, "layouts/main")
 }
 
 // Logout - destroy session
@@ -61,7 +61,7 @@ func Logout(c *fiber.Ctx) {
 	}
 	fmt.Println("Attempting to logout user")
 	c.ClearCookie()
-	c.Render("bye", datos)
+	c.Render("bye", datos, "layouts/main")
 }
 
 // Nuevo - controlador para formulario nuevo usuario
@@ -72,7 +72,7 @@ func Nuevo(c *fiber.Ctx) {
 		"role":         "",
 		"mensajeflash": "",
 	}
-	c.Render("crearusuario", datos)
+	c.Render("crearusuario", datos, "layouts/main")
 }
 
 // Crear usuario
@@ -94,28 +94,28 @@ func Crear(c *fiber.Ctx) {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 
 	if len(user) < 4 || len(email) < 4 {
 		datos["mensajeflash"] = "Usuario y correo no pueden estar vacíos o demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		c.Render("crearusuario", datos)
+		c.Render("crearusuario", datos, "layouts/main")
 		return
 	}
 	models.Dbcon.Where("username = ?", user).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Usuario ya existe: " + user
 		datos["alerta"] = template.HTML("alert alert-danger")
-		c.Render("crearusuario", datos)
+		c.Render("crearusuario", datos, "layouts/main")
 		return
 	}
 	models.Dbcon.Where("email = ?", email).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Dirección de correo-e ya existe: " + email
 		datos["alerta"] = template.HTML("alert alert-danger")
-		c.Render("crearusuario", datos)
+		c.Render("crearusuario", datos, "layouts/main")
 		return
 	}
 	models.Dbcon.Where("role = ?", "usuario").Find(&rol)
@@ -127,7 +127,7 @@ func Crear(c *fiber.Ctx) {
 
 	models.Dbcon.Create(&usuario)
 	datos["mensajeflash"] = "Usuario " + usuario.Username + " creado exitosamente"
-	c.Render("crearusuario", datos)
+	c.Render("crearusuario", datos, "layouts/main")
 }
 
 // Checklogin POST verificar login
@@ -146,21 +146,21 @@ func Checklogin(c *fiber.Ctx) {
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 
-	fmt.Println(datos)
+	fmt.Println(datos, "layouts/main")
 	if len(usuario.Email) < 1 {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(usuario.Password), []byte(password)); err != nil {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 	fmt.Println("Login: Successful")
@@ -186,16 +186,18 @@ func Checklogin(c *fiber.Ctx) {
 
 // CrearToken debe ser reusable
 func CrearToken(usuario, rol string) (string, error) {
-	algorithm := jwt.HmacSha256(Secret)
+	// Create token
+	btoken := jwt.New(jwt.SigningMethodHS256)
 
-	claims := jwt.NewClaim()
-	claims.Set("Role", rol)
-	claims.Set("User", usuario)
-	claims.SetTime("exp", time.Now().Add(time.Hour*2))
+	// Set claims
+	claims := btoken.Claims.(jwt.MapClaims)
+	claims["user"] = usuario
+	claims["role"] = rol
+	claims["exp"] = time.Now().Add(time.Hour * 3).Unix()
 
-	token, err := algorithm.Encode(claims)
+	// Generate encoded token and send it as response.
+	token, err := btoken.SignedString([]byte(Secret))
 	if err != nil {
-		fmt.Println("ERROR: ", err)
 		return "", err
 	}
 
@@ -206,45 +208,25 @@ func CrearToken(usuario, rol string) (string, error) {
 // ValidateToken to check JWT cookie
 func ValidateToken(token string) interface{} {
 	fmt.Println("Starting token validation...")
-	algorithm := jwt.HmacSha256(Secret)
-	if algorithm.Validate(token) != nil {
-		fmt.Println("ERROR: Invalid token")
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(Secret), nil
+	})
+	if err != nil {
+		fmt.Println(err)
 		return map[string]string{"User": "", "Role": ""}
 	}
 
-	loadedClaims, err := algorithm.Decode(token)
 	if err != nil {
 		fmt.Println("ERROR: ", err)
 		return map[string]string{"User": "", "Role": ""}
 	}
 
-	role, err := loadedClaims.Get("Role")
-	if err != nil {
-		fmt.Println("ERROR: ", err)
-		return map[string]string{"User": "", "Role": ""}
-	}
-
-	user, err := loadedClaims.Get("User")
-	if err != nil {
-		fmt.Println("ERROR: ", err)
-		return map[string]string{"User": "", "Role": ""}
-	}
-
-	roleString, ok := role.(string)
-	if !ok {
-		fmt.Println("ERROR: ", err)
-		return map[string]string{"User": "", "Role": ""}
-	}
-
-	userString, ok := user.(string)
-	if !ok {
-		fmt.Println("ERROR: ", err)
-		return map[string]string{"User": "", "Role": ""}
-	}
+	fmt.Println(claims)
 
 	udatos := make(map[string]string)
-	udatos["User"] = userString
-	udatos["Role"] = roleString
+	udatos["User"] = claims["user"].(string)
+	udatos["Role"] = claims["role"].(string)
 
 	return udatos
 }

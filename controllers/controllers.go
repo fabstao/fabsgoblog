@@ -120,7 +120,7 @@ func Show(c *fiber.Ctx) {
 	var autor models.User
 	//pid := c.ParamNames()
 	pidv := c.Params("id")
-	models.Dbcon.Where("id = ?", pidv[0]).Find(&post)
+	models.Dbcon.Where("id = ?", pidv).Find(&post)
 	models.Dbcon.Where("id = ?", post.UserID).Find(&autor)
 	datos["titulo"] = post.Titulo
 	datos["mitexto"] = post.Texto
@@ -130,7 +130,7 @@ func Show(c *fiber.Ctx) {
 	if datos["user"] == autor.Username {
 		datos["editar"] = true
 	}
-	c.Status(fiber.StatusOK).Render("show", datos)
+	c.Status(fiber.StatusOK).Render("show", datos, "layouts/main")
 }
 
 // Post - New post form
@@ -145,7 +145,7 @@ func Post(c *fiber.Ctx) {
 	}
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
-		c.Status(fiber.StatusForbidden).Render("login", datos)
+		c.Status(fiber.StatusForbidden).Render("login", datos, "layouts/main")
 		return
 	}
 	fmt.Println("TOKEN - index: ", token)
@@ -158,7 +158,7 @@ func Post(c *fiber.Ctx) {
 
 	datos["user"] = clamas["User"]
 	datos["role"] = clamas["Role"]
-	c.Render("new", datos)
+	c.Render("new", datos, "layouts/main")
 }
 
 // New post
@@ -173,7 +173,7 @@ func New(c *fiber.Ctx) {
 	}
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
-		c.Status(fiber.StatusForbidden).Render("login", datos)
+		c.Status(fiber.StatusForbidden).Render("login", datos, "layouts/main")
 		return
 	}
 	fmt.Println("TOKEN - index: ", token)
@@ -194,7 +194,7 @@ func New(c *fiber.Ctx) {
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		c.Status(fiber.StatusForbidden).Render("login", datos)
+		c.Status(fiber.StatusForbidden).Render("login", datos, "layouts/main")
 		return
 	}
 
@@ -202,7 +202,7 @@ func New(c *fiber.Ctx) {
 		datos["mensajeflash"] = "Título o texto demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
 		//c.SendStatus(http.StatusForbidden)
-		c.Render("new", datos)
+		c.Render("new", datos, "layouts/main")
 		return
 	}
 
@@ -214,7 +214,7 @@ func New(c *fiber.Ctx) {
 	datos["mensajeflash"] = "Entrada " + post.Titulo + " creada correctamente"
 	datos["titulo"] = titulo
 	datos["texto"] = texto
-	c.Render("new", datos)
+	c.Render("new", datos, "layouts/main")
 }
 
 // Edit - New post form
@@ -230,7 +230,7 @@ func Edit(c *fiber.Ctx) {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 	fmt.Println("TOKEN - index: ", token)
@@ -251,14 +251,14 @@ func Edit(c *fiber.Ctx) {
 	if autor.Username != datos["user"] {
 		fmt.Println("SECURITY ERROR: Unauthorized access")
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 	datos["titulo"] = post.Titulo
 	datos["mitexto"] = post.Texto
 	datos["autor"] = autor.Username
 	datos["pid"] = pidv[0]
-	c.Render("edit", datos)
+	c.Render("edit", datos, "layouts/main")
 }
 
 // Update post
@@ -274,7 +274,7 @@ func Update(c *fiber.Ctx) {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 	fmt.Println("TOKEN - index: ", token)
@@ -296,14 +296,14 @@ func Update(c *fiber.Ctx) {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 
 	if len(titulo) < 4 || len(texto) < 4 {
 		datos["mensajeflash"] = "Título o texto demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		c.Render("new", datos)
+		c.Render("new", datos, "layouts/main")
 		return
 	}
 
@@ -316,7 +316,7 @@ func Update(c *fiber.Ctx) {
 	datos["titulo"] = titulo
 	datos["mitexto"] = texto
 	datos["pid"] = pid
-	c.Render("edit", datos)
+	c.Render("edit", datos, "layouts/main")
 }
 
 // Delete - danger, take care
@@ -332,7 +332,7 @@ func Delete(c *fiber.Ctx) {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		c.Render("login", datos)
+		c.Render("login", datos, "layouts/main")
 		return
 	}
 	fmt.Println("TOKEN - index: ", token)
@@ -349,7 +349,7 @@ func Delete(c *fiber.Ctx) {
 	models.Dbcon.Unscoped().Delete(&post)
 	datos["mensajeflash"] = "Entrada borrada correctamente"
 	datos["alerta"] = template.HTML("alert alert-success")
-	c.Render("index", datos)
+	c.Render("index", datos, "layouts/main")
 }
 
 // Hello REST example

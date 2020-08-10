@@ -6,7 +6,8 @@ import (
 
 	"github.com/gofiber/fiber"
 	"github.com/gofiber/fiber/middleware"
-	"github.com/gofiber/template/django"
+	jwtware "github.com/gofiber/jwt"
+	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
 
 	"gitlab.com/fabstao/fabsgoblog/controllers"
@@ -29,7 +30,7 @@ func main() {
 	models.DbConnect()
 	models.MigrarModelos()
 
-	engine := django.New("./views", ".html")
+	engine := html.New("./views", ".html")
 
 	// Iniciar echo web framework
 	f := fiber.New(&fiber.Settings{
@@ -61,10 +62,13 @@ func main() {
 	api := f.Group("/api")
 	api.Post("/hello", controllers.Hello)
 
-	//sapi := f.Group("/sapi")
-	//sapi.Use(middleware.JWT([]byte(controllers.Secret)))
+	sapi := f.Group("/sapi")
+	sapi.Use(jwtware.New(jwtware.Config{
+		SigningKey: []byte(controllers.Secret),
+	}))
 
 	// Go fiber server!
 	f.Listen(port)
 	defer models.Dbcon.Close()
+
 }
