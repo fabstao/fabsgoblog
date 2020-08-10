@@ -95,7 +95,8 @@ func Inicio(c *fiber.Ctx) {
 		autor = models.User{}
 	}
 	datos["entradas"] = sposts
-	c.Status(fiber.StatusOK).Render("index", datos)
+	fmt.Println("Empezando render")
+	c.Status(fiber.StatusOK).Render("index", datos, "layouts/main")
 }
 
 // Show - Show post form - anyone can read

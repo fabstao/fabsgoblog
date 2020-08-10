@@ -1,6 +1,6 @@
-{% block content %}
+
 <div class="container">
-{% if mensajeflash %}
+{% if mensajeflash != "" %}
     <div class="{{ alerta }}" role="alert">
   {{ mensajeflash }}
     </div>
@@ -8,17 +8,17 @@
 {% if entradas %}
 <table class="table">
     <tr>
-    <th>Título</th><th>Autor</th>{{ if .user }}<th>Editar</th><th>Borrar</th>{{ end }}
+    <th>Título</th><th>Autor</th>{% if user %}<th>Editar</th><th>Borrar</th>{% endif %}
     </tr>
     {% for entrada in entradas %}
     <tr>
-        <td><a href="/show/{{.ID}}"><strong>{{ .Titulo }}</strong></a></td><td>{{ .Autor }}</td>
+        <td><a href="/show/{{entrada.ID}}"><strong>{{ entrada.Titulo }}</strong></a></td><td>{{ entrada.Autor }}</td>
         {% if entrada.User == entrada.Autor %}
-        <td><a href="/edit/{{.ID}}"><img 
+        <td><a href="/edit/{{entrada.ID}}"><img 
         src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Pencil.svg/1200px-Pencil.svg.png" 
         width="32" height="24"/>
         </a></td>
-        <td><a href="/delete/{{.ID}}" onclick='return confirm("¿Estás seguro de borrar?")'>
+        <td><a href="/delete/{{entrada.ID}}" onclick='return confirm("¿Estás seguro de borrar?")'>
         <img src="https://icons-for-free.com/iconfiles/png/512/minus+remove+icon-1320183421124253557.png"
         width="24" height="24"/>
         </a></td>
@@ -28,4 +28,3 @@
     </table>
 {% endif %}
 </div>
-{% endblock %}

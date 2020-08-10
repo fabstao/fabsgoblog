@@ -59,7 +59,7 @@ func main() {
 	f.Post("/edit", controllers.Update)
 
 	api := f.Group("/api")
-	api.Get("/hello", controllers.Hello)
+	api.Post("/hello", controllers.Hello)
 
 	//sapi := f.Group("/sapi")
 	//sapi.Use(middleware.JWT([]byte(controllers.Secret)))
