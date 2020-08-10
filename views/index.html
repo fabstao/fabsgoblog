@@ -1,19 +1,19 @@
 {% block content %}
 <div class="container">
-{% if .mensajeflash %}
-    <div class="{{ .alerta }}" role="alert">
-  {{ .mensajeflash }}
+{% if mensajeflash %}
+    <div class="{{ alerta }}" role="alert">
+  {{ mensajeflash }}
     </div>
   {{ end }}
-{{ if .entradas }}
+{% if entradas %}
 <table class="table">
     <tr>
     <th>Título</th><th>Autor</th>{{ if .user }}<th>Editar</th><th>Borrar</th>{{ end }}
     </tr>
-    {{ range .entradas }}
+    {% for entrada in entradas %}
     <tr>
         <td><a href="/show/{{.ID}}"><strong>{{ .Titulo }}</strong></a></td><td>{{ .Autor }}</td>
-        {{ if eq .User .Autor }}
+        {% if entrada.User == entrada.Autor %}
         <td><a href="/edit/{{.ID}}"><img 
         src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Pencil.svg/1200px-Pencil.svg.png" 
         width="32" height="24"/>
@@ -22,10 +22,10 @@
         <img src="https://icons-for-free.com/iconfiles/png/512/minus+remove+icon-1320183421124253557.png"
         width="24" height="24"/>
         </a></td>
-        {{ end }}
+        {% endif %}
     </tr>
-    {{ end }}
+    {% endfor %}
     </table>
-{{ end }}
+{% endif %}
 </div>
 {% endblock %}
