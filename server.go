@@ -23,6 +23,7 @@ func main() {
 	controllers.SITEKEY = os.Getenv("SITEKEY")
 	controllers.Secret = os.Getenv("FGOSECRET")
 	controllers.Cdomain = os.Getenv("CDOMAIN")
+	port := os.Getenv("PORT")
 
 	// Inicializar capa de datos
 	models.DbConnect()
@@ -64,6 +65,6 @@ func main() {
 	//sapi.Use(middleware.JWT([]byte(controllers.Secret)))
 
 	// Go fiber server!
-	f.Listen(8019)
+	f.Listen(port)
 	defer models.Dbcon.Close()
 }
