@@ -47,7 +47,7 @@ type PageRender struct {
 }
 
 // Inicio Handler
-func Inicio(c *fiber.Ctx) error {
+func Inicio(c *fiber.Ctx) {
 	token := ""
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
@@ -95,11 +95,11 @@ func Inicio(c *fiber.Ctx) error {
 		autor = models.User{}
 	}
 	datos["entradas"] = sposts
-	return c.Render("index", datos)
+	c.Render("index", datos)
 }
 
 // Show - Show post form - anyone can read
-func Show(c *fiber.Ctx) error {
+func Show(c *fiber.Ctx) {
 	token := ""
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
@@ -129,11 +129,11 @@ func Show(c *fiber.Ctx) error {
 	if datos["user"] == autor.Username {
 		datos["editar"] = true
 	}
-	return c.Render("show", datos)
+	c.Render("show", datos)
 }
 
 // Post - New post form
-func Post(c *fiber.Ctx) error {
+func Post(c *fiber.Ctx) {
 	token := "null"
 	datos := fiber.Map{
 		"title":        "Fabs Blog",
@@ -145,7 +145,8 @@ func Post(c *fiber.Ctx) error {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("index", datos)
+		c.Render("login", datos)
+		return
 	}
 	fmt.Println("TOKEN - index: ", token)
 	RefreshFCookie(token)
@@ -157,11 +158,11 @@ func Post(c *fiber.Ctx) error {
 
 	datos["user"] = clamas["User"]
 	datos["role"] = clamas["Role"]
-	return c.Render("new", datos)
+	c.Render("new", datos)
 }
 
 // New post
-func New(c *fiber.Ctx) error {
+func New(c *fiber.Ctx) {
 	token := "null"
 	datos := fiber.Map{
 		"title":        "Fabs Blog",
@@ -173,7 +174,8 @@ func New(c *fiber.Ctx) error {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("index", datos)
+		c.Render("index", datos)
+		return
 	}
 	fmt.Println("TOKEN - index: ", token)
 	RefreshFCookie(token)
@@ -194,14 +196,16 @@ func New(c *fiber.Ctx) error {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 
 	if len(titulo) < 4 || len(texto) < 4 {
 		datos["mensajeflash"] = "Título o texto demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
 		//c.SendStatus(http.StatusForbidden)
-		return c.Render("new", datos)
+		c.Render("new", datos)
+		return
 	}
 
 	post.Titulo = titulo
@@ -212,11 +216,11 @@ func New(c *fiber.Ctx) error {
 	datos["mensajeflash"] = "Entrada " + post.Titulo + " creada correctamente"
 	datos["titulo"] = titulo
 	datos["texto"] = texto
-	return c.Render("new", datos)
+	c.Render("new", datos)
 }
 
 // Edit - New post form
-func Edit(c *fiber.Ctx) error {
+func Edit(c *fiber.Ctx) {
 	token := "null"
 	datos := fiber.Map{
 		"title":        "Fabs Blog",
@@ -228,7 +232,8 @@ func Edit(c *fiber.Ctx) error {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("index", datos)
+		c.Render("login", datos)
+		return
 	}
 	fmt.Println("TOKEN - index: ", token)
 	RefreshFCookie(token)
@@ -248,17 +253,18 @@ func Edit(c *fiber.Ctx) error {
 	if autor.Username != datos["user"] {
 		fmt.Println("SECURITY ERROR: Unauthorized access")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 	datos["titulo"] = post.Titulo
 	datos["mitexto"] = post.Texto
 	datos["autor"] = autor.Username
 	datos["pid"] = pidv[0]
-	return c.Render("edit", datos)
+	c.Render("edit", datos)
 }
 
 // Update post
-func Update(c *fiber.Ctx) error {
+func Update(c *fiber.Ctx) {
 	token := "null"
 	datos := fiber.Map{
 		"title":        "Fabs Blog",
@@ -270,7 +276,8 @@ func Update(c *fiber.Ctx) error {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 	fmt.Println("TOKEN - index: ", token)
 	RefreshFCookie(token)
@@ -291,13 +298,15 @@ func Update(c *fiber.Ctx) error {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 
 	if len(titulo) < 4 || len(texto) < 4 {
 		datos["mensajeflash"] = "Título o texto demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render("new", datos)
+		c.Render("new", datos)
+		return
 	}
 
 	models.Dbcon.Where("username = ?", datos["user"].(string)).Find(&usuario)
@@ -309,11 +318,11 @@ func Update(c *fiber.Ctx) error {
 	datos["titulo"] = titulo
 	datos["mitexto"] = texto
 	datos["pid"] = pid
-	return c.Render("edit", datos)
+	c.Render("edit", datos)
 }
 
 // Delete - danger, take care
-func Delete(c *fiber.Ctx) error {
+func Delete(c *fiber.Ctx) {
 	token := "null"
 	datos := fiber.Map{
 		"title":        "Fabs Blog",
@@ -325,7 +334,8 @@ func Delete(c *fiber.Ctx) error {
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 	fmt.Println("TOKEN - index: ", token)
 	RefreshFCookie(token)
@@ -341,11 +351,11 @@ func Delete(c *fiber.Ctx) error {
 	models.Dbcon.Unscoped().Delete(&post)
 	datos["mensajeflash"] = "Entrada borrada correctamente"
 	datos["alerta"] = template.HTML("alert alert-success")
-	return c.Render("index", datos)
+	c.Render("index", datos)
 }
 
 // Hello REST example
-func Hello(c *fiber.Ctx) error {
+func Hello(c *fiber.Ctx) {
 	nombre := c.Query("nombre")
 	var content struct {
 		Response  string    `json:"response"`
@@ -355,5 +365,5 @@ func Hello(c *fiber.Ctx) error {
 	content.Response = "Hola " + nombre
 	content.Timestamp = time.Now().UTC()
 	content.Random = rand.Intn(1000)
-	return c.JSON(content)
+	c.JSON(content)
 }

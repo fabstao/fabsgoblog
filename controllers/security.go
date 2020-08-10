@@ -41,18 +41,18 @@ func RefreshFCookie(token string) {
 }
 
 // Login Handler
-func Login(c *fiber.Ctx) error {
+func Login(c *fiber.Ctx) {
 	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
 	}
-	return c.Render("login", datos)
+	c.Render("login", datos)
 }
 
 // Logout - destroy session
-func Logout(c *fiber.Ctx) error {
+func Logout(c *fiber.Ctx) {
 	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
@@ -61,22 +61,22 @@ func Logout(c *fiber.Ctx) error {
 	}
 	fmt.Println("Attempting to logout user")
 	c.ClearCookie()
-	return c.Render("bye", datos)
+	c.Render("bye", datos)
 }
 
 // Nuevo - controlador para formulario nuevo usuario
-func Nuevo(c *fiber.Ctx) error {
+func Nuevo(c *fiber.Ctx) {
 	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
 	}
-	return c.Render("crearusuario", datos)
+	c.Render("crearusuario", datos)
 }
 
 // Crear usuario
-func Crear(c *fiber.Ctx) error {
+func Crear(c *fiber.Ctx) {
 	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
@@ -94,25 +94,29 @@ func Crear(c *fiber.Ctx) error {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("index", datos)
+		c.Render("login", datos)
+		return
 	}
 
 	if len(user) < 4 || len(email) < 4 {
 		datos["mensajeflash"] = "Usuario y correo no pueden estar vacíos o demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render("crearusuario", datos)
+		c.Render("crearusuario", datos)
+		return
 	}
 	models.Dbcon.Where("username = ?", user).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Usuario ya existe: " + user
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render("crearusuario", datos)
+		c.Render("crearusuario", datos)
+		return
 	}
 	models.Dbcon.Where("email = ?", email).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Dirección de correo-e ya existe: " + email
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render("crearusuario", datos)
+		c.Render("crearusuario", datos)
+		return
 	}
 	models.Dbcon.Where("role = ?", "usuario").Find(&rol)
 	usuario.Username = user
@@ -123,11 +127,11 @@ func Crear(c *fiber.Ctx) error {
 
 	models.Dbcon.Create(&usuario)
 	datos["mensajeflash"] = "Usuario " + usuario.Username + " creado exitosamente"
-	return c.Render("crearusuario", datos)
+	c.Render("crearusuario", datos)
 }
 
 // Checklogin POST verificar login
-func Checklogin(c *fiber.Ctx) error {
+func Checklogin(c *fiber.Ctx) {
 	var usuario models.User
 	email := c.FormValue("email")
 	password := c.FormValue("password")
@@ -142,19 +146,22 @@ func Checklogin(c *fiber.Ctx) error {
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 
 	fmt.Println(datos)
 	if len(usuario.Email) < 1 {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(usuario.Password), []byte(password)); err != nil {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
 		c.SendStatus(http.StatusForbidden)
-		return c.Render("login", datos)
+		c.Render("login", datos)
+		return
 	}
 	fmt.Println("Login: Successful")
 	datos["user"] = usuario.Username
@@ -164,7 +171,8 @@ func Checklogin(c *fiber.Ctx) error {
 	PToken, err = CrearToken(usuario.Username, rol.Role)
 	datos["role"] = rol.Role
 	if err != nil {
-		return err
+		fmt.Println("ERROR creating token")
+		return
 	}
 	cookie.Name = "frontends1"
 	cookie.Value = strings.TrimSpace(PToken)
@@ -174,8 +182,6 @@ func Checklogin(c *fiber.Ctx) error {
 	fmt.Println("Logged in as: ", usuario.Username)
 	fmt.Println("Role: ", rol.Role)
 	c.Redirect("/", http.StatusMovedPermanently)
-	return nil
-	//return c.Render(http.StatusOK, "index", datos)
 }
 
 // CrearToken debe ser reusable

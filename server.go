@@ -60,10 +60,10 @@ func main() {
 	api := f.Group("/api")
 	api.Get("/api", controllers.Hello)
 
-	sapi := e.Group("/sapi")
-	sapi.Use(middleware.JWT([]byte(controllers.Secret)))
+	//sapi := f.Group("/sapi")
+	//sapi.Use(middleware.JWT([]byte(controllers.Secret)))
 
-	// Go echo server!
-	e.Logger.Fatal(e.Start(":8019"))
+	// Go fiber server!
+	f.Listen(8019)
 	defer models.Dbcon.Close()
 }
