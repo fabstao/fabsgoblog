@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/gofiber/fiber"
 	"github.com/robbert229/jwt"
 	"gitlab.com/fabstao/fabsgoblog/models"
 	"gitlab.com/fabstao/fabsgoblog/views"
@@ -17,7 +17,6 @@ import (
 )
 
 // Security types, vars and configuration
-var cookie http.Cookie
 
 // Secret : change here for all JWT signing
 var Secret string
@@ -31,52 +30,54 @@ var PToken string
 // Cdomain - domain for session cookie
 var Cdomain string
 
+var cookie fiber.Cookie
+
+// RefreshFCookie used to keep session alive
+func RefreshFCookie(token string) {
+	cookie.Name = "frontends1"
+	cookie.Value = token
+	cookie.Expires = time.Now().Add(15 * time.Minute)
+	cookie.Domain = Cdomain
+}
+
 // Login Handler
-func Login(c echo.Context) error {
-	datos := echo.Map{
+func Login(c *fiber.Ctx) error {
+	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
 	}
-	return c.Render(http.StatusOK, "login", datos)
+	return c.Render("login", datos)
 }
 
 // Logout - destroy session
-func Logout(c echo.Context) error {
-	datos := echo.Map{
+func Logout(c *fiber.Ctx) error {
+	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
 	}
 	fmt.Println("Attempting to logout user")
-	cookie, err := c.Cookie("frontends1")
-	if err != nil {
-		fmt.Println("WARNING: Cookie could not be read: ", err)
-		cookie.Name = "frontends1"
-	}
-	cookie.Value = ""
-	cookie.Expires = time.Now()
-	cookie.Domain = ""
-	c.SetCookie(cookie)
-	return c.Render(http.StatusOK, "bye", datos)
+	c.ClearCookie()
+	return c.Render("bye", datos)
 }
 
 // Nuevo - controlador para formulario nuevo usuario
-func Nuevo(c echo.Context) error {
-	datos := echo.Map{
+func Nuevo(c *fiber.Ctx) error {
+	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
 	}
-	return c.Render(http.StatusOK, "crearusuario", datos)
+	return c.Render("crearusuario", datos)
 }
 
 // Crear usuario
-func Crear(c echo.Context) error {
-	datos := echo.Map{
+func Crear(c *fiber.Ctx) error {
+	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
 		"role":         "",
@@ -92,25 +93,26 @@ func Crear(c echo.Context) error {
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusForbidden, "login", datos)
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("index", datos)
 	}
 
 	if len(user) < 4 || len(email) < 4 {
 		datos["mensajeflash"] = "Usuario y correo no pueden estar vacíos o demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusOK, "crearusuario", datos)
+		return c.Render("crearusuario", datos)
 	}
 	models.Dbcon.Where("username = ?", user).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Usuario ya existe: " + user
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusOK, "crearusuario", datos)
+		return c.Render("crearusuario", datos)
 	}
 	models.Dbcon.Where("email = ?", email).Find(&checausuario)
 	if len(checausuario.Email) > 0 {
 		datos["mensajeflash"] = "Dirección de correo-e ya existe: " + email
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusOK, "crearusuario", datos)
+		return c.Render("crearusuario", datos)
 	}
 	models.Dbcon.Where("role = ?", "usuario").Find(&rol)
 	usuario.Username = user
@@ -121,17 +123,17 @@ func Crear(c echo.Context) error {
 
 	models.Dbcon.Create(&usuario)
 	datos["mensajeflash"] = "Usuario " + usuario.Username + " creado exitosamente"
-	return c.Render(http.StatusOK, "crearusuario", datos)
+	return c.Render("crearusuario", datos)
 }
 
 // Checklogin POST verificar login
-func Checklogin(c echo.Context) error {
+func Checklogin(c *fiber.Ctx) error {
 	var usuario models.User
 	email := c.FormValue("email")
 	password := c.FormValue("password")
 
 	models.Dbcon.Where("email = ?", email).Find(&usuario)
-	datos := echo.Map{
+	datos := fiber.Map{
 		"title":        views.Comunes.Title,
 		"user":         "",
 		"role":         "",
@@ -139,17 +141,20 @@ func Checklogin(c echo.Context) error {
 	}
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
-		return c.Render(http.StatusOK, "login", datos)
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
 	}
 
 	fmt.Println(datos)
 	if len(usuario.Email) < 1 {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
-		return c.Render(http.StatusOK, "login", datos)
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(usuario.Password), []byte(password)); err != nil {
 		datos["mensajeflash"] = "Correo-e o contraseña incorrectos"
-		return c.Render(http.StatusOK, "login", datos)
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
 	}
 	fmt.Println("Login: Successful")
 	datos["user"] = usuario.Username
@@ -165,10 +170,11 @@ func Checklogin(c echo.Context) error {
 	cookie.Value = strings.TrimSpace(PToken)
 	cookie.Expires = time.Now().Add(15 * time.Minute)
 	cookie.Domain = Cdomain
-	c.SetCookie(&cookie)
+	c.Cookie(&cookie)
 	fmt.Println("Logged in as: ", usuario.Username)
 	fmt.Println("Role: ", rol.Role)
-	return c.Redirect(http.StatusMovedPermanently, "/")
+	c.Redirect("/", http.StatusMovedPermanently)
+	return nil
 	//return c.Render(http.StatusOK, "index", datos)
 }
 

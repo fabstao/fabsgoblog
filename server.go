@@ -4,10 +4,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/foolin/goview/supports/echoview"
+	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/middleware"
+	"github.com/gofiber/template/django"
 	"github.com/joho/godotenv"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+
 	"gitlab.com/fabstao/fabsgoblog/controllers"
 	"gitlab.com/fabstao/fabsgoblog/models"
 )
@@ -23,51 +24,41 @@ func main() {
 	controllers.Secret = os.Getenv("FGOSECRET")
 	controllers.Cdomain = os.Getenv("CDOMAIN")
 
-	//templatesDir := "views/templates/*.html"
-
 	// Inicializar capa de datos
 	models.DbConnect()
 	models.MigrarModelos()
 
+	engine := django.New("./views", ".html")
+
 	// Iniciar echo web framework
-	e := echo.New()
+	f := fiber.New(&fiber.Settings{
+		Views: engine,
+	})
 
 	// Static assets
-	e.Static("/static", "views/assets")
+	f.Static("/static", "views/assets")
 
 	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	f.Use(middleware.Logger())
+	f.Use(middleware.Recover())
 
-	// Views/templates
-	/*t := &views.Template{
-		Templates: template.Must(template.ParseGlob(templatesDir)),
-	}
+	// echo ROUTER (declare HTTP verbs here: GET, PUT, Post, DELETE)
+	f.Get("/", controllers.Inicio)
+	f.Get("/login", controllers.Login)
+	f.Get("/logout", controllers.Logout)
+	f.Get("/cuenta", controllers.Nuevo)
+	f.Get("/new", controllers.Post)
+	f.Get("/show/:id", controllers.Show)
+	f.Get("/edit/:id", controllers.Edit)
+	f.Get("/delete/:id", controllers.Delete)
 
-	e.Renderer = t */
+	f.Post("/cuenta", controllers.Crear)
+	f.Post("/login", controllers.Checklogin)
+	f.Post("/new", controllers.New)
+	f.Post("/edit", controllers.Update)
 
-	e.Renderer = echoview.Default()
-
-	// echo ROUTER (declare HTTP verbs here: GET, PUT, POST, DELETE)
-	e.GET("/", controllers.Inicio)
-	e.GET("/login", controllers.Login)
-	e.GET("/logout", controllers.Logout)
-	e.GET("/cuenta", controllers.Nuevo)
-	e.GET("/new", controllers.Post)
-	e.GET("/show/:id", controllers.Show)
-	e.GET("/edit/:id", controllers.Edit)
-	e.GET("/delete/:id", controllers.Delete)
-
-	e.POST("/cuenta", controllers.Crear)
-	e.POST("/login", controllers.Checklogin)
-	e.POST("/new", controllers.New)
-	e.POST("/edit", controllers.Update)
-
-	//h := e.Group("/admin")
-	//h.GET("/index", controllers.Inicio)
-
-	api := e.Group("/api")
-	api.GET("/api", controllers.Hello)
+	api := f.Group("/api")
+	api.Get("/api", controllers.Hello)
 
 	sapi := e.Group("/sapi")
 	sapi.Use(middleware.JWT([]byte(controllers.Secret)))

@@ -7,14 +7,27 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/gofiber/fiber"
 	"gitlab.com/fabstao/fabsgoblog/models"
 )
 
 //var cookie http.Cookie
 
-// FrontData echo.Map type trying to apply DRY
-var FrontData echo.Map
+/*
+type Cookie struct {
+	Name     string    `json:"name"`
+	Value    string    `json:"value"`
+	Path     string    `json:"path"`
+	Domain   string    `json:"domain"`
+	Expires  time.Time `json:"expires"`
+	Secure   bool      `json:"secure"`
+	HTTPOnly bool      `json:"http_only"`
+	SameSite string    `json:"same_site"`
+}
+*/
+
+// FrontData fiber.Map type trying to apply DRY
+var FrontData fiber.Map
 
 // Titulo for PageRender
 type Titulo struct {
@@ -34,20 +47,19 @@ type PageRender struct {
 }
 
 // Inicio Handler
-func Inicio(c echo.Context) error {
-	token := "null"
-	if vcookie, err := c.Cookie("frontends1"); err != nil {
-		fmt.Println("ERROR reading cookie: ", err)
+func Inicio(c *fiber.Ctx) error {
+	token := ""
+	if token = c.Cookies("frontends1"); token == "" {
+		fmt.Println("ERROR reading cookie ")
 	} else {
-		token = vcookie.Value
 		fmt.Println("TOKEN - index: ", token)
-		vcookie.Expires = time.Now().Add(15 * time.Minute)
-		c.SetCookie(vcookie)
+		RefreshFCookie(token)
+		c.Cookie(&cookie)
 	}
 
 	clamas := ValidateToken(token).(map[string]string)
 	fmt.Println("Empezando Blog...")
-	datos := echo.Map{
+	datos := fiber.Map{
 		"title": "Fabs Blog",
 		"user":  "",
 		"role":  "",
@@ -83,22 +95,21 @@ func Inicio(c echo.Context) error {
 		autor = models.User{}
 	}
 	datos["entradas"] = sposts
-	return c.Render(http.StatusOK, "index", datos)
+	return c.Render("index", datos)
 }
 
 // Show - Show post form - anyone can read
-func Show(c echo.Context) error {
-	token := "null"
-	if vcookie, err := c.Cookie("frontends1"); err != nil {
-		fmt.Println("ERROR reading cookie: ", err)
+func Show(c *fiber.Ctx) error {
+	token := ""
+	if token = c.Cookies("frontends1"); token == "" {
+		fmt.Println("ERROR reading cookie ")
 	} else {
-		token = vcookie.Value
 		fmt.Println("TOKEN - index: ", token)
-		vcookie.Expires = time.Now().Add(15 * time.Minute)
-		c.SetCookie(vcookie)
+		RefreshFCookie(token)
+		c.Cookie(&cookie)
 	}
 	clamas := ValidateToken(token).(map[string]string)
-	datos := echo.Map{
+	datos := fiber.Map{
 		"title":        "Fabs Blog",
 		"mensajeflash": "",
 	}
@@ -107,66 +118,66 @@ func Show(c echo.Context) error {
 	var post models.Post
 	var autor models.User
 	//pid := c.ParamNames()
-	pidv := c.ParamValues()
+	pidv := c.Params("id")
 	models.Dbcon.Where("id = ?", pidv[0]).Find(&post)
 	models.Dbcon.Where("id = ?", post.UserID).Find(&autor)
 	datos["titulo"] = post.Titulo
 	datos["mitexto"] = post.Texto
 	datos["autor"] = autor.Username
 	datos["fecha"] = post.UpdatedAt.String()
-	datos["pid"] = pidv[0]
+	datos["pid"] = pidv
 	if datos["user"] == autor.Username {
 		datos["editar"] = true
 	}
-	return c.Render(http.StatusOK, "show", datos)
+	return c.Render("show", datos)
 }
 
 // Post - New post form
-func Post(c echo.Context) error {
+func Post(c *fiber.Ctx) error {
 	token := "null"
-	if vcookie, err := c.Cookie("frontends1"); err != nil {
-		fmt.Println("ERROR reading cookie: ", err)
-	} else {
-		token = vcookie.Value
-		fmt.Println("TOKEN - index: ", token)
-		vcookie.Expires = time.Now().Add(15 * time.Minute)
-		c.SetCookie(vcookie)
-	}
-
-	clamas := ValidateToken(token).(map[string]string)
-	fmt.Println("Empezando Blog...")
-	fmt.Println(clamas)
-	datos := echo.Map{
-		"title":        "Fabs Blog",
-		"user":         "",
-		"role":         "",
-		"mensajeflash": "",
-	}
-
-	datos["user"] = clamas["User"]
-	datos["role"] = clamas["Role"]
-	return c.Render(http.StatusOK, "new", datos)
-}
-
-// New post
-func New(c echo.Context) error {
-	token := "null"
-	datos := echo.Map{
+	datos := fiber.Map{
 		"title":        "Fabs Blog",
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
 		"alerta":       template.HTML("alert alert-success"),
 	}
-	if vcookie, err := c.Cookie("frontends1"); err != nil {
-		fmt.Println("ERROR reading cookie: ", err)
-		return c.Render(http.StatusForbidden, "login", datos)
-	} else {
-		token = vcookie.Value
-		fmt.Println("TOKEN - index: ", token)
-		vcookie.Expires = time.Now().Add(15 * time.Minute)
-		c.SetCookie(vcookie)
+	if token = c.Cookies("frontends1"); token == "" {
+		fmt.Println("ERROR reading cookie ")
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("index", datos)
 	}
+	fmt.Println("TOKEN - index: ", token)
+	RefreshFCookie(token)
+	c.Cookie(&cookie)
+
+	clamas := ValidateToken(token).(map[string]string)
+	fmt.Println("Empezando Blog...")
+	fmt.Println(clamas)
+
+	datos["user"] = clamas["User"]
+	datos["role"] = clamas["Role"]
+	return c.Render("new", datos)
+}
+
+// New post
+func New(c *fiber.Ctx) error {
+	token := "null"
+	datos := fiber.Map{
+		"title":        "Fabs Blog",
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
+		"alerta":       template.HTML("alert alert-success"),
+	}
+	if token = c.Cookies("frontends1"); token == "" {
+		fmt.Println("ERROR reading cookie ")
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("index", datos)
+	}
+	fmt.Println("TOKEN - index: ", token)
+	RefreshFCookie(token)
+	c.Cookie(&cookie)
 
 	clamas := ValidateToken(token).(map[string]string)
 
@@ -182,13 +193,15 @@ func New(c echo.Context) error {
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusForbidden, "login", datos)
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
 	}
 
 	if len(titulo) < 4 || len(texto) < 4 {
 		datos["mensajeflash"] = "Título o texto demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusOK, "new", datos)
+		//c.SendStatus(http.StatusForbidden)
+		return c.Render("new", datos)
 	}
 
 	post.Titulo = titulo
@@ -199,69 +212,69 @@ func New(c echo.Context) error {
 	datos["mensajeflash"] = "Entrada " + post.Titulo + " creada correctamente"
 	datos["titulo"] = titulo
 	datos["texto"] = texto
-	return c.Render(http.StatusOK, "new", datos)
+	return c.Render("new", datos)
 }
 
 // Edit - New post form
-func Edit(c echo.Context) error {
+func Edit(c *fiber.Ctx) error {
 	token := "null"
-	if vcookie, err := c.Cookie("frontends1"); err != nil {
-		fmt.Println("ERROR reading cookie: ", err)
-	} else {
-		token = vcookie.Value
-		fmt.Println("TOKEN - index: ", token)
-		vcookie.Expires = time.Now().Add(15 * time.Minute)
-		c.SetCookie(vcookie)
-	}
-
-	clamas := ValidateToken(token).(map[string]string)
-	fmt.Println("Empezando Blog...")
-	fmt.Println(clamas)
-	datos := echo.Map{
-		"title":        "Fabs Blog",
-		"user":         "",
-		"role":         "",
-		"mensajeflash": "",
-	}
-
-	datos["user"] = clamas["User"]
-	datos["role"] = clamas["Role"]
-	var post models.Post
-	var autor models.User
-	pid := c.ParamNames()
-	fmt.Println(pid)
-	pidv := c.ParamValues()
-	models.Dbcon.Where("id = ?", pidv[0]).Find(&post)
-	models.Dbcon.Where("id = ?", post.UserID).Find(&autor)
-	if autor.Username != datos["user"] {
-		fmt.Println("SECURITY ERROR: Unauthorized access")
-		return c.Render(http.StatusForbidden, "index", datos)
-	}
-	datos["titulo"] = post.Titulo
-	datos["mitexto"] = post.Texto
-	datos["autor"] = autor.Username
-	datos["pid"] = pidv[0]
-	return c.Render(http.StatusOK, "edit", datos)
-}
-
-// Update post
-func Update(c echo.Context) error {
-	token := "null"
-	datos := echo.Map{
+	datos := fiber.Map{
 		"title":        "Fabs Blog",
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
 		"alerta":       template.HTML("alert alert-success"),
 	}
-	if vcookie, err := c.Cookie("frontends1"); err != nil {
-		fmt.Println("ERROR reading cookie: ", err)
-		return c.Render(http.StatusForbidden, "login", datos)
-	} else {
-		token = vcookie.Value
-		vcookie.Expires = time.Now().Add(15 * time.Minute)
-		c.SetCookie(vcookie)
+	if token = c.Cookies("frontends1"); token == "" {
+		fmt.Println("ERROR reading cookie ")
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("index", datos)
 	}
+	fmt.Println("TOKEN - index: ", token)
+	RefreshFCookie(token)
+	c.Cookie(&cookie)
+
+	clamas := ValidateToken(token).(map[string]string)
+	fmt.Println("Empezando Blog...")
+	fmt.Println(clamas)
+
+	datos["user"] = clamas["User"]
+	datos["role"] = clamas["Role"]
+	var post models.Post
+	var autor models.User
+	pidv := c.Params("id")
+	models.Dbcon.Where("id = ?", pidv).Find(&post)
+	models.Dbcon.Where("id = ?", post.UserID).Find(&autor)
+	if autor.Username != datos["user"] {
+		fmt.Println("SECURITY ERROR: Unauthorized access")
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
+	}
+	datos["titulo"] = post.Titulo
+	datos["mitexto"] = post.Texto
+	datos["autor"] = autor.Username
+	datos["pid"] = pidv[0]
+	return c.Render("edit", datos)
+}
+
+// Update post
+func Update(c *fiber.Ctx) error {
+	token := "null"
+	datos := fiber.Map{
+		"title":        "Fabs Blog",
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
+		"alerta":       template.HTML("alert alert-success"),
+	}
+	if token = c.Cookies("frontends1"); token == "" {
+		fmt.Println("ERROR reading cookie ")
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
+	}
+	fmt.Println("TOKEN - index: ", token)
+	RefreshFCookie(token)
+	c.Cookie(&cookie)
 
 	clamas := ValidateToken(token).(map[string]string)
 
@@ -277,13 +290,14 @@ func Update(c echo.Context) error {
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusForbidden, "login", datos)
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
 	}
 
 	if len(titulo) < 4 || len(texto) < 4 {
 		datos["mensajeflash"] = "Título o texto demasiado cortos"
 		datos["alerta"] = template.HTML("alert alert-danger")
-		return c.Render(http.StatusOK, "new", datos)
+		return c.Render("new", datos)
 	}
 
 	models.Dbcon.Where("username = ?", datos["user"].(string)).Find(&usuario)
@@ -295,41 +309,44 @@ func Update(c echo.Context) error {
 	datos["titulo"] = titulo
 	datos["mitexto"] = texto
 	datos["pid"] = pid
-	return c.Render(http.StatusOK, "edit", datos)
+	return c.Render("edit", datos)
 }
 
 // Delete - danger, take care
-func Delete(c echo.Context) error {
+func Delete(c *fiber.Ctx) error {
 	token := "null"
-	if vcookie, err := c.Cookie("frontends1"); err != nil {
-		fmt.Println("ERROR reading cookie: ", err)
-	} else {
-		token = vcookie.Value
-		fmt.Println("TOKEN - index: ", token)
-		vcookie.Expires = time.Now().Add(15 * time.Minute)
-		c.SetCookie(vcookie)
-	}
-	clamas := ValidateToken(token).(map[string]string)
-	datos := echo.Map{
+	datos := fiber.Map{
 		"title":        "Fabs Blog",
-		"mensajeflash": "ERROR borrando entrada",
-		"alerta":       template.HTML("alert alert-danger"),
+		"user":         "",
+		"role":         "",
+		"mensajeflash": "",
+		"alerta":       template.HTML("alert alert-success"),
 	}
+	if token = c.Cookies("frontends1"); token == "" {
+		fmt.Println("ERROR reading cookie ")
+		c.SendStatus(http.StatusForbidden)
+		return c.Render("login", datos)
+	}
+	fmt.Println("TOKEN - index: ", token)
+	RefreshFCookie(token)
+	c.Cookie(&cookie)
+
+	clamas := ValidateToken(token).(map[string]string)
 	datos["user"] = clamas["User"]
 	datos["role"] = clamas["Role"]
 	var post models.Post
 	//pid := c.ParamNames()
-	pidv := c.ParamValues()
-	models.Dbcon.Where("id = ?", pidv[0]).Find(&post)
+	pidv := c.Params("id")
+	models.Dbcon.Where("id = ?", pidv).Find(&post)
 	models.Dbcon.Unscoped().Delete(&post)
 	datos["mensajeflash"] = "Entrada borrada correctamente"
 	datos["alerta"] = template.HTML("alert alert-success")
-	return c.Render(http.StatusOK, "index", datos)
+	return c.Render("index", datos)
 }
 
 // Hello REST example
-func Hello(c echo.Context) error {
-	nombre := c.QueryParam("nombre")
+func Hello(c *fiber.Ctx) error {
+	nombre := c.Query("nombre")
 	var content struct {
 		Response  string    `json:"response"`
 		Timestamp time.Time `json:"timestamp"`
@@ -338,5 +355,5 @@ func Hello(c echo.Context) error {
 	content.Response = "Hola " + nombre
 	content.Timestamp = time.Now().UTC()
 	content.Random = rand.Intn(1000)
-	return c.JSON(http.StatusOK, content)
+	return c.JSON(content)
 }
