@@ -8,6 +8,7 @@
 * Improve models - in progress
 * Add Basic Auth - in progress
 * ~Add Captcha protection~
+* ~Add JWT protected REST API~
 * Add e-mail validation workflow
 * ~Add Posts and comments forms~
 * ~Add Docker support~
@@ -16,7 +17,8 @@
 
 * Go
 * GORM
-* echo
+* fiber
+* JWT
 * PostgreSQL
 * Recaptcha v3
 * HTML 5
