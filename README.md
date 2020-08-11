@@ -11,6 +11,7 @@
 * Add e-mail validation workflow
 * ~Add Posts and comments forms~
 * ~Add Docker support~
+* Finish JWT implementation for Dgrijalva and echo middleware
 
 ## Technologies used:
 
