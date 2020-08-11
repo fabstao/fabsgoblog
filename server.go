@@ -18,7 +18,6 @@ func main() {
 	// Initial vars
 	err := godotenv.Load()
 	if err != nil {
-		//log.Fatal("Error loading .env file")
 		log.Println("Error loading .env file")
 	}
 	controllers.SITEKEY = os.Getenv("SITEKEY")
@@ -41,7 +40,13 @@ func main() {
 	f.Static("/static", "views/assets")
 
 	// Middleware
-	f.Use(middleware.Logger())
+	f.Use(middleware.Logger(middleware.LoggerConfig{
+		Format:     "[ ${pid} | ${ip} | ${ips} | ${method} | ${time} | ${path} | ${status} | ${error} | ${header:<Authorization>} ]",
+		TimeFormat: "15:04:05",
+		TimeZone:   "America/Mexico_City",
+
+		Output: os.Stdout,
+	}))
 	f.Use(middleware.Recover())
 
 	// echo ROUTER (declare HTTP verbs here: GET, PUT, Post, DELETE)
@@ -60,15 +65,19 @@ func main() {
 	f.Post("/edit", controllers.Update)
 
 	api := f.Group("/api")
-	api.Post("/hello", controllers.Hello)
+	api.Get("/", controllers.AllPosts)
+	api.Post("/login", controllers.RESTChecklogin)
+	api.Get("/:id", controllers.RESTShow)
 
 	sapi := f.Group("/sapi")
 	sapi.Use(jwtware.New(jwtware.Config{
 		SigningKey: []byte(controllers.Secret),
 	}))
+	sapi.Put("/", controllers.RESTPost)
+	sapi.Get("/:id", controllers.RESTShow)
+	sapi.Delete("/:id", controllers.RESTDelete)
 
 	// Go fiber server!
 	f.Listen(port)
 	defer models.Dbcon.Close()
-
 }

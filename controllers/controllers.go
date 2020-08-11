@@ -3,9 +3,7 @@ package controllers
 import (
 	"fmt"
 	"html/template"
-	"math/rand"
 	"net/http"
-	"time"
 
 	"github.com/gofiber/fiber"
 	"gitlab.com/fabstao/fabsgoblog/models"
@@ -350,18 +348,4 @@ func Delete(c *fiber.Ctx) {
 	datos["mensajeflash"] = "Entrada borrada correctamente"
 	datos["alerta"] = template.HTML("alert alert-success")
 	c.Render("index", datos, "layouts/main")
-}
-
-// Hello REST example
-func Hello(c *fiber.Ctx) {
-	nombre := c.Query("nombre")
-	var content struct {
-		Response  string    `json:"response"`
-		Timestamp time.Time `json:"timestamp"`
-		Random    int       `json:"random"`
-	}
-	content.Response = "Hola " + nombre
-	content.Timestamp = time.Now().UTC()
-	content.Random = rand.Intn(1000)
-	c.JSON(content)
 }
