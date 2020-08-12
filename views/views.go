@@ -16,7 +16,7 @@ type ComunesSitio struct {
 
 // Comunes - compartir info común a todas las páginas
 var Comunes = ComunesSitio{
-	Title:  "FabsBlog",
+	Title:  "Fabs Blog",
 	Header: "Fabs Blog",
 	Footer: "By Fabs",
 }
