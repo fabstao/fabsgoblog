@@ -255,7 +255,8 @@ func Edit(c *fiber.Ctx) {
 	datos["titulo"] = post.Titulo
 	datos["mitexto"] = post.Texto
 	datos["autor"] = autor.Username
-	datos["pid"] = pidv[0]
+	datos["pid"] = pidv
+	fmt.Println(datos)
 	c.Render("edit", datos, "layouts/main")
 }
 
@@ -267,7 +268,7 @@ func Update(c *fiber.Ctx) {
 		"user":         "",
 		"role":         "",
 		"mensajeflash": "",
-		"alerta":       template.HTML("alert alert-success"),
+		"alerta":       template.HTML("alert alert-danger"),
 	}
 	if token = c.Cookies("frontends1"); token == "" {
 		fmt.Println("ERROR reading cookie ")
@@ -289,10 +290,10 @@ func Update(c *fiber.Ctx) {
 	titulo := c.FormValue("titulo")
 	texto := c.FormValue("texto")
 	pid := c.FormValue("pid")
+	fmt.Printf("Título: %v , PID: %v", titulo, pid)
 
 	if grecaptcha := validateCaptcha(c.FormValue("g-recaptcha-response")); !grecaptcha {
 		datos["mensajeflash"] = "Este sistema sólo es para humanos"
-		datos["alerta"] = template.HTML("alert alert-danger")
 		c.SendStatus(http.StatusForbidden)
 		c.Render("login", datos, "layouts/main")
 		return
@@ -300,17 +301,22 @@ func Update(c *fiber.Ctx) {
 
 	if len(titulo) < 4 || len(texto) < 4 {
 		datos["mensajeflash"] = "Título o texto demasiado cortos"
-		datos["alerta"] = template.HTML("alert alert-danger")
 		c.Render("new", datos, "layouts/main")
 		return
 	}
 
-	models.Dbcon.Where("username = ?", datos["user"].(string)).Find(&usuario)
 	models.Dbcon.Where("id = ?", pid).Find(&post)
-	post.Titulo = titulo
-	post.Texto = texto
-	models.Dbcon.Save(&post)
-	datos["mensajeflash"] = "Entrada " + post.Titulo + " actualizada correctamente"
+	models.Dbcon.Where("id = ?", post.UserID).Find(&usuario)
+	datos["mensajeflash"] = "Entrada " + post.Titulo + " sólo puede ser modificada por el autor"
+	if usuario.Username == datos["user"] {
+		post = models.Post{}
+		models.Dbcon.Model(&post).Where("id = ?", pid).Updates(map[string]interface{}{
+			"titulo": titulo,
+			"texto":  texto,
+		})
+		datos["mensajeflash"] = "Entrada " + post.Titulo + " actualizada correctamente"
+		datos["alerta"] = template.HTML("alert alert-success")
+	}
 	datos["titulo"] = titulo
 	datos["mitexto"] = texto
 	datos["pid"] = pid
