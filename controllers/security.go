@@ -54,13 +54,13 @@ func Login(c *fiber.Ctx) {
 // Logout - destroy session
 func Logout(c *fiber.Ctx) {
 	datos := fiber.Map{
-		"title":        views.Comunes.Title,
-		"user":         "",
-		"role":         "",
-		"mensajeflash": "",
+		"title": views.Comunes.Title,
+		"user":  "",
+		"role":  "",
 	}
 	fmt.Println("Attempting to logout user")
 	c.ClearCookie()
+	c.ClearCookie("frontends1")
 	c.Render("bye", datos, "layouts/main")
 }
 
