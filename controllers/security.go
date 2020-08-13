@@ -43,10 +43,10 @@ func RefreshFCookie(token string) {
 // DeleteFCookie : Make sure user gets kicked out
 func DeleteFCookie(c *fiber.Ctx) {
 	cookie.Name = "frontends1"
-	cookie.Value = ""
-	cookie.Expires = time.Now()
-	cookie.Domain = "expire.badexample.com"
+	cookie.Expires = time.Now().Add(-time.Minute)
+	c.ClearCookie()
 	c.Cookie(&cookie)
+	fmt.Println("Cookie: ", cookie)
 }
 
 // Login Handler
@@ -68,9 +68,9 @@ func Logout(c *fiber.Ctx) {
 		"role":  "",
 	}
 	fmt.Println("Attempting to logout user")
-	DeleteFCookie(c)
 	c.ClearCookie()
 	c.ClearCookie("frontends1")
+	DeleteFCookie(c)
 	c.Render("bye", datos, "layouts/main")
 }
 
